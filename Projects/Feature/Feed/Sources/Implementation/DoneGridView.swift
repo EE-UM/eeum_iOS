@@ -47,7 +47,7 @@ struct DonePostCard: View {
     var body: some View {
         if let postId = post.postId {
             NavigationLink {
-                postDetailBuilder.makePostDetailView(postId: postId)
+                postDetailBuilder.makePostDetailView(postId: postId, source: .feed)
             } label: {
                 DonePostCardContent(post: post, index: index, total: total)
             }

@@ -19,6 +19,8 @@ public final class ShareViewModel: ObservableObject {
     @Published var didShareSuccessfully: Bool = false
     @Published var showSettingsPopup: Bool = false
     @Published var showCompleteView: Bool = false
+    @Published var showValidationAlert: Bool = false
+    @Published var validationMessage: String = ""
 
     let maxCharacters: Int = 200
 
@@ -37,6 +39,16 @@ public final class ShareViewModel: ObservableObject {
     }
 
     func showSettings() {
+        var missing: [String] = []
+        if selectedMusicArtworkUrl == nil { missing.append("음악") }
+        if titleText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { missing.append("제목") }
+        if storyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { missing.append("내용") }
+
+        if !missing.isEmpty {
+            validationMessage = "\(missing.joined(separator: ", "))을(를) 입력해 주세요."
+            showValidationAlert = true
+            return
+        }
         showSettingsPopup = true
     }
     

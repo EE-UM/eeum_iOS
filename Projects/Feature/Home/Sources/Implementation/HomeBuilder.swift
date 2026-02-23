@@ -146,7 +146,7 @@ private struct RandomPostCard: View {
             // View Button
             if let postId = post.postId {
                 NavigationLink {
-                    postDetailBuilder.makePostDetailView(postId: postId)
+                    postDetailBuilder.makePostDetailView(postId: postId, source: .home)
                 } label: {
                     Text("view")
                         .font(.system(size: 16, weight: .medium))
@@ -206,7 +206,7 @@ extension View {
 }
 
 private struct PreviewPostDetailBuilder: PostDetailBuildable {
-    func makePostDetailView(postId: String) -> AnyView {
+    func makePostDetailView(postId: String, source: NavigationSource) -> AnyView {
         AnyView(Text("Post Detail: \(postId)"))
     }
 }

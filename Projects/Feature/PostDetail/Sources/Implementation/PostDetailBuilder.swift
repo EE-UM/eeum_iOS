@@ -20,7 +20,7 @@ public struct PostDetailBuilder: PostDetailBuildable {
         self.coordinator = coordinator
     }
 
-    @MainActor public func makePostDetailView(postId: String) -> AnyView {
+    @MainActor public func makePostDetailView(postId: String, source: NavigationSource) -> AnyView {
         let viewModel = PostDetailViewModel(
             postRepository: postRepository,
             commentUseCase: commentUseCase,
@@ -28,6 +28,6 @@ public struct PostDetailBuilder: PostDetailBuildable {
             coordinator: coordinator,
             postId: postId
         )
-        return AnyView(PostDetailView(viewModel: viewModel))
+        return AnyView(PostDetailView(viewModel: viewModel, source: source))
     }
 }

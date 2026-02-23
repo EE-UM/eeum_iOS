@@ -35,7 +35,7 @@ public struct PostsListView: View {
                         ForEach(Array(viewModel.myPosts.enumerated()), id: \.offset) { _, post in
                             if let postId = post.postId {
                                 NavigationLink {
-                                    postDetailBuilder.makePostDetailView(postId: postId)
+                                    postDetailBuilder.makePostDetailView(postId: postId, source: .feed)
                                 } label: {
                                     MyPostCard(post: post)
                                 }

@@ -8,13 +8,18 @@ struct PostDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showCommentsList: Bool = false
     @State private var isNavigatingToSearch: Bool = false
-    @State private var commentText: String = ""
     @State private var showPostActionSheet: Bool = false
     @State private var isShowingEditSheet: Bool = false
-    @FocusState private var isCommentFocused: Bool
+    @State private var showCommentSheet: Bool = false
+    @State private var selectedCommentForReport: Comment?
+    @State private var commentToReport: Comment?
+    @State private var showReportReasonView: Bool = false
 
-    init(viewModel: PostDetailViewModel) {
+    private let source: NavigationSource
+
+    init(viewModel: PostDetailViewModel, source: NavigationSource = .feed) {
         _viewModel = StateObject(wrappedValue: viewModel)
+        self.source = source
     }
 
     var body: some View {
@@ -28,13 +33,22 @@ struct PostDetailView: View {
                         if let detail = viewModel.postDetail {
                             PostDetailContent(
                                 detail: detail,
-                                isPlaying: viewModel.isPlaying,
+                                isPlaying: viewModel.isPostPlaying,
                                 onTogglePlay: {
                                     viewModel.togglePlay()
                                 },
                                 isShowingCommentsList: showCommentsList,
                                 onToggleCommentsList: {
                                     showCommentsList.toggle()
+                                },
+                                onPlayComment: { url in
+                                    viewModel.playComment(url: url)
+                                },
+                                isCommentPlaying: { url in
+                                    viewModel.isPlaying(url: url)
+                                },
+                                onLongPressComment: { comment in
+                                    selectedCommentForReport = comment
                                 }
                             )
                             .padding(.bottom, 40)
@@ -46,25 +60,37 @@ struct PostDetailView: View {
                 }
 
                 CommentInputBar(
-                    commentText: $commentText,
-                    isCommentFocused: _isCommentFocused,
                     selectedMusicTitle: viewModel.selectedMusicDisplayText,
                     selectedMusicArtworkURL: viewModel.selectedMusic?.artworkUrl,
                     onTapAddMusic: {
                         openMusicSearch()
                     },
-                    onSend: {
-                        let trimmed = commentText.trimmingCharacters(in: .whitespacesAndNewlines)
-                        guard !trimmed.isEmpty else { return }
-                        Task {
-                            await viewModel.createComment(content: trimmed)
-                            await MainActor.run {
-                                commentText = ""
-                            }
-                        }
+                    onTapInput: {
+                        showCommentSheet = true
                     },
                     onRemoveMusic: {
                         viewModel.clearSelectedMusic()
+                    }
+                )
+            }
+
+            // 댓글 신고 오버레이
+            if let comment = selectedCommentForReport {
+                CommentReportOverlay(
+                    comment: comment,
+                    isPlaying: viewModel.isPlaying(url: comment.appleMusicUrl ?? ""),
+                    onPlay: {
+                        if let url = comment.appleMusicUrl {
+                            viewModel.playComment(url: url)
+                        }
+                    },
+                    onReport: {
+                        commentToReport = comment
+                        selectedCommentForReport = nil
+                        showReportReasonView = true
+                    },
+                    onDismiss: {
+                        selectedCommentForReport = nil
                     }
                 )
             }
@@ -75,9 +101,15 @@ struct PostDetailView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Image("home")
-                        .font(.system(size: 20))
-                        .foregroundColor(.black)
+                    if source == .home {
+                        Image("home")
+                            .font(.system(size: 20))
+                            .foregroundColor(.black)
+                    } else {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.black)
+                    }
                 }
             }
 
@@ -140,7 +172,38 @@ struct PostDetailView: View {
                 EmptyView()
             }
         }
+        .sheet(isPresented: $showCommentSheet) {
+            CommentSheet(
+                viewModel: viewModel,
+                onTapAddMusic: {
+                    showCommentSheet = false
+                    Task {
+                        try? await Task.sleep(nanoseconds: 300_000_000)
+                        openMusicSearch()
+                    }
+                },
+                onLongPressComment: { comment in
+                    showCommentSheet = false
+                    Task {
+                        try? await Task.sleep(nanoseconds: 300_000_000)
+                        selectedCommentForReport = comment
+                    }
+                }
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+        }
         .background(navigationLink)
+        .enableSwipeBack()
+        .fullScreenCover(isPresented: $showReportReasonView) {
+            if let comment = commentToReport {
+                ReportReasonView(comment: comment) { reason, customText in
+                    print("Report submitted: \(reason.rawValue), custom: \(customText ?? "none")")
+                    commentToReport = nil
+                    // TODO: API 연동
+                }
+            }
+        }
     }
 
     private struct PostDetailContent: View {
@@ -149,6 +212,9 @@ struct PostDetailView: View {
         let onTogglePlay: () -> Void
         let isShowingCommentsList: Bool
         let onToggleCommentsList: () -> Void
+        let onPlayComment: (String) -> Void
+        let isCommentPlaying: (String) -> Bool
+        let onLongPressComment: (Comment) -> Void
 
         var body: some View {
             VStack(spacing: 0) {
@@ -205,9 +271,9 @@ struct PostDetailView: View {
 
                 Button(action: onToggleCommentsList) {
                     HStack {
-                        Image("list")
+                        Image(isShowingCommentsList ? "musicbox" : "list")
                             .font(.system(size: 16))
-                        Text(isShowingCommentsList ? "카드보기" : "글보기")
+                        Text(isShowingCommentsList ? "커버보기" : "글보기")
                             .font(.system(size: 16, weight: .medium))
                     }
                     .foregroundColor(.black)
@@ -223,13 +289,35 @@ struct PostDetailView: View {
                         if isShowingCommentsList {
                             LazyVStack(alignment: .leading, spacing: 16) {
                                 ForEach(comments, id: \.commentId) { comment in
-                                    CommentListItem(comment: comment)
+                                    CommentListItem(
+                                        comment: comment,
+                                        isPlaying: isCommentPlaying(comment.appleMusicUrl ?? ""),
+                                        onPlay: {
+                                            if let url = comment.appleMusicUrl {
+                                                onPlayComment(url)
+                                            }
+                                        },
+                                        onLongPress: {
+                                            onLongPressComment(comment)
+                                        }
+                                    )
                                 }
                             }
                         } else {
                             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                                 ForEach(comments, id: \.commentId) { comment in
-                                    CommentCard(comment: comment)
+                                    CommentCard(
+                                        comment: comment,
+                                        isPlaying: isCommentPlaying(comment.appleMusicUrl ?? ""),
+                                        onPlay: {
+                                            if let url = comment.appleMusicUrl {
+                                                onPlayComment(url)
+                                            }
+                                        },
+                                        onLongPress: {
+                                            onLongPressComment(comment)
+                                        }
+                                    )
                                 }
                             }
                         }

@@ -46,14 +46,16 @@ public struct SharePopupView: View {
     }
 
     public var body: some View {
-        ZStack {
-            // Dim
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-                .onTapGesture { isPresented = false }
+        GeometryReader { geometry in
+            ZStack {
+                // Dim
+                Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                    .onTapGesture { isPresented = false }
 
-            popup
-                .offset(y: offset.height)
+                popup
+                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+                    .offset(y: offset.height)
                 .gesture(
                     DragGesture()
                         .onChanged { value in
@@ -77,7 +79,8 @@ public struct SharePopupView: View {
                         }
                 )
                 .animation(isDragging ? nil : .spring(response: 0.4, dampingFraction: 0.8), value: offset)
-                .onTapGesture { } // 팝업 탭 시 배경 dismiss 방지
+            }
+            .ignoresSafeArea(.keyboard)
         }
     }
 
@@ -86,28 +89,32 @@ public struct SharePopupView: View {
             header
 
             content
-                .padding(.horizontal, 20)
-                .padding(.top, 22)
-                .padding(.bottom, 26)
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
+                .padding(.bottom, 28)
+
+            Spacer(minLength: 0)
 
             bottomBar
         }
         .frame(height: 410)
-        .padding(.horizontal, 30)
         .background(Color.mainBackground)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .contentShape(Rectangle())
+        .padding(.horizontal, 40)
     }
 
     // MARK: - Header
     private var header: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
             Text("설정")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(Color.textPrimary)
-                .padding(.top, 22)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
 
             Divider()
-                .opacity(0.15)
+                .foregroundColor(Color.gray.opacity(0.15))
         }
     }
 
@@ -117,30 +124,36 @@ public struct SharePopupView: View {
             autoSection
             manualSection
         }
+        .animation(.none, value: completionType)
     }
 
-    private var autoSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            // 라디오 + 제목
-            HStack(alignment: .top, spacing: 12) {
-                RadioCircle(isSelected: completionType == .auto) {
-                    completionType = .auto
-                }
-                Text("플레이리스트 자동 완료")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(Color.textPrimary)
-                    .padding(.top, 1)
-            }
+    private var isAutoSelected: Bool { completionType == .auto }
 
-            // 설명 (라디오만큼 들여쓰기)
+    private var autoSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // 라디오 + 제목
+            Button {
+                completionType = .auto
+            } label: {
+                HStack(spacing: 12) {
+                    RadioCircle(isSelected: isAutoSelected)
+                    Text("플레이리스트 자동 완료")
+                        .font(.system(size: 16, weight: isAutoSelected ? .semibold : .regular))
+                        .foregroundColor(Color.textPrimary)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            // 설명
             Text("추가되는 댓글 및 음악 수를 설정하면\n자동으로 플레이리스트가 완료처리됩니다.")
                 .font(.system(size: 13, weight: .regular))
                 .foregroundColor(Color.textFootnote)
                 .lineSpacing(4)
-                .padding(.leading, 32)
+                .padding(.leading, 34)
 
             // 최대 댓글 갯수 + pill dropdown
-            HStack(spacing: 12) {
+            HStack {
                 Text("최대 댓글 갯수")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(Color.textPrimary)
@@ -154,76 +167,83 @@ public struct SharePopupView: View {
                         }
                     }
                 } label: {
-                    HStack(spacing: 10) {
+                    HStack(spacing: 8) {
                         Text("\(commentLimit)개")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.system(size: 15, weight: .semibold))
                         Image(systemName: "triangle.fill")
-                            .font(.system(size: 10, weight: .bold))
-                            .rotationEffect(.degrees(180)) // ▼
-                            .offset(y: 1)
+                            .font(.system(size: 8, weight: .bold))
+                            .rotationEffect(.degrees(180))
                     }
                     .foregroundColor(Color.textPrimary)
                     .padding(.horizontal, 16)
-                    .frame(height: 40)
+                    .frame(height: 36)
                     .background(Color.black.opacity(0.06))
                     .clipShape(Capsule())
                 }
+                .disabled(!isAutoSelected)
             }
-            .padding(.leading, 32)
+            .padding(.leading, 34)
+            .padding(.top, 4)
         }
+        .opacity(isAutoSelected ? 1.0 : 0.45)
     }
 
     private var manualSection: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top, spacing: 12) {
-                RadioCircle(isSelected: completionType == .manual) {
-                    completionType = .manual
+        VStack(alignment: .leading, spacing: 10) {
+            Button {
+                completionType = .manual
+            } label: {
+                HStack(spacing: 12) {
+                    RadioCircle(isSelected: !isAutoSelected)
+                    Text("수동 완료 처리")
+                        .font(.system(size: 16, weight: isAutoSelected ? .regular : .semibold))
+                        .foregroundColor(Color.textPrimary)
                 }
-
-                Text("수동 완료 처리")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(completionType == .manual ? Color.textPrimary : Color.gray.opacity(0.7))
-                    .padding(.top, 1)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
 
             Text("inbox 내 작성한 사연에서 직접\n플레이리스트를 완료할 수 있습니다.")
                 .font(.system(size: 13, weight: .regular))
-                .foregroundColor(completionType == .manual ? Color.textFootnote : Color.gray.opacity(0.55))
+                .foregroundColor(Color.textFootnote)
                 .lineSpacing(4)
-                .padding(.leading, 32)
+                .padding(.leading, 34)
         }
-        .opacity(completionType == .manual ? 1.0 : 0.45)
+        .opacity(isAutoSelected ? 0.45 : 1.0)
     }
 
     // MARK: - Bottom Bar
     private var bottomBar: some View {
         VStack(spacing: 0) {
-            Divider().opacity(0.15)
+            Divider()
+                .foregroundColor(Color.gray.opacity(0.15))
 
             HStack(spacing: 0) {
                 Button {
                     isPresented = false
                 } label: {
                     Text("취소")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color.textPrimary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 20)
                 }
 
                 Divider()
-                    .opacity(0.15)
+                    .foregroundColor(Color.gray.opacity(0.15))
+                    .frame(height: 24)
 
                 Button {
                     onConfirm(completionType, commentLimit)
                     isPresented = false
                 } label: {
                     Text("공유")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(Color.textPrimary)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 20)
                 }
             }
-            .frame(height: 72)
         }
     }
 }
@@ -231,23 +251,19 @@ public struct SharePopupView: View {
 // MARK: - Radio UI
 private struct RadioCircle: View {
     let isSelected: Bool
-    let onTap: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
-            ZStack {
-                Circle()
-                    .stroke(isSelected ? Color.black : Color.gray.opacity(0.35), lineWidth: 2)
-                    .frame(width: 22, height: 22)
+        ZStack {
+            Circle()
+                .stroke(isSelected ? Color.black : Color.gray.opacity(0.35), lineWidth: 2)
+                .frame(width: 22, height: 22)
 
-                if isSelected {
-                    Circle()
-                        .fill(Color.black)
-                        .frame(width: 12, height: 12)
-                }
+            if isSelected {
+                Circle()
+                    .fill(Color.black)
+                    .frame(width: 12, height: 12)
             }
         }
-        .buttonStyle(.plain)
     }
 }
 

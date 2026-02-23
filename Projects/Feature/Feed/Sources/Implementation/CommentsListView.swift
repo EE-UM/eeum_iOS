@@ -31,7 +31,7 @@ public struct CommentsListView: View {
                         ForEach(Array(viewModel.commentedPosts.enumerated()), id: \.offset) { _, post in
                             if let postId = post.postId {
                                 NavigationLink {
-                                    postDetailBuilder.makePostDetailView(postId: postId)
+                                    postDetailBuilder.makePostDetailView(postId: postId, source: .feed)
                                 } label: {
                                     CommentedPostRow(post: post)
                                 }

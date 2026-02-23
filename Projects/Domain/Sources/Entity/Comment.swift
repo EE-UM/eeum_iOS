@@ -7,7 +7,8 @@
 
 import Foundation
 
-public struct Comment {
+public struct Comment: Identifiable {
+    public var id: String { commentId ?? UUID().uuidString }
     public let commentId: String?
     public let postId: String?
     public let userId: String?

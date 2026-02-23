@@ -7,12 +7,12 @@ import PostDetailInterface
 final class PostDetailViewModel: ObservableObject {
     @Published var postDetail: PostDetail?
     @Published var isLoading: Bool = false
-    @Published var isPlaying: Bool = false
     @Published var selectedMusic: Music?
     @Published var isUpdatingLike: Bool = false
     @Published var isMyPost: Bool = false
     @Published var isManagingPost: Bool = false
     @Published var didDeletePost: Bool = false
+    @Published var currentPlayingURL: String?
 
     private let postRepository: PostRepository
     private let commentUseCase: CommentUseCase
@@ -21,6 +21,7 @@ final class PostDetailViewModel: ObservableObject {
     private let postId: String
     private var myPostIds: Set<String> = []
     private var hasLoadedMyPosts: Bool = false
+    private let audioPlayer = AudioPlayerService.shared
 
     init(
         postRepository: PostRepository,
@@ -133,7 +134,24 @@ final class PostDetailViewModel: ObservableObject {
     }
 
     func togglePlay() {
-        isPlaying.toggle()
+        guard let detail = postDetail, !detail.appleMusicUrl.isEmpty else { return }
+        audioPlayer.toggle(url: detail.appleMusicUrl)
+        currentPlayingURL = audioPlayer.isPlaying ? detail.appleMusicUrl : nil
+    }
+
+    func playComment(url: String) {
+        guard !url.isEmpty else { return }
+        audioPlayer.toggle(url: url)
+        currentPlayingURL = audioPlayer.isPlaying ? url : nil
+    }
+
+    func isPlaying(url: String) -> Bool {
+        audioPlayer.isCurrentlyPlaying(url: url)
+    }
+
+    var isPostPlaying: Bool {
+        guard let detail = postDetail else { return false }
+        return audioPlayer.isCurrentlyPlaying(url: detail.appleMusicUrl)
     }
 
     func markPostCompleted() {

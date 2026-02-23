@@ -35,8 +35,10 @@ public struct ShareView: View {
 
     public var body: some View {
         ZStack {
-            VStack(spacing: 0) {
+            Color.mainBackground
+                .ignoresSafeArea()
 
+            VStack(spacing: 0) {
                 // Voice Recording Button / Album Art
                 HStack {
                     NavigationLink {
@@ -102,59 +104,54 @@ public struct ShareView: View {
                             .padding(.top, 14)
                             .scrollContentBackground(.hidden)
                     }
-
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
                 .padding(.top, 20)
 
+                Spacer(minLength: 0)
 
-
-                Spacer()
-
-                // Character Count
-                HStack {
-                    Text("\(viewModel.storyText.count)/\(viewModel.maxCharacters)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 8)
-
-                if let errorMessage = viewModel.shareErrorMessage {
-                    Text(errorMessage)
-                        .font(.footnote)
-                        .foregroundColor(.red)
-                        .padding(.horizontal)
-                        .padding(.bottom, 4)
-                }
-
-                // Share Button
-                Button {
-                    viewModel.showSettings()
-                } label: {
-                    Group {
-                        if viewModel.isSharing {
-                            ProgressView()
-                                .tint(.white)
-                        } else {
-                            Text("share")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                        }
+                // Bottom: Character Count + Share Button
+                VStack(spacing: 8) {
+                    HStack {
+                        Text("\(viewModel.storyText.count)/\(viewModel.maxCharacters)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Spacer()
                     }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(Color.textPrimary)
-                    .cornerRadius(28)
+                    .padding(.horizontal)
+
+                    if let errorMessage = viewModel.shareErrorMessage {
+                        Text(errorMessage)
+                            .font(.footnote)
+                            .foregroundColor(.red)
+                            .padding(.horizontal)
+                    }
+
+                    Button {
+                        viewModel.showSettings()
+                    } label: {
+                        Group {
+                            if viewModel.isSharing {
+                                ProgressView()
+                                    .tint(.white)
+                            } else {
+                                Text("share")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(Color.textPrimary)
+                        .cornerRadius(28)
+                    }
+                    .disabled(viewModel.isSharing)
+                    .padding(.horizontal, 32)
                 }
-                .disabled(viewModel.isSharing)
-                .padding(.horizontal, 32)
-                .padding(.bottom, 32)
+                .padding(.bottom, 16)
             }
-            .background(Color.mainBackground)
-            .toolbarRole(.editor)
+            .navigationBarBackButtonHidden(true)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button {
@@ -163,11 +160,6 @@ public struct ShareView: View {
                         Image("home")
                             .foregroundColor(.primary)
                     }
-                }
-            }
-            .onChange(of: viewModel.didShareSuccessfully) { newValue in
-                if newValue {
-                    dismiss()
                 }
             }
 
@@ -180,6 +172,11 @@ public struct ShareView: View {
                     }
                 )
             }
+        }
+        .alert("입력 확인", isPresented: $viewModel.showValidationAlert) {
+            Button("확인", role: .cancel) {}
+        } message: {
+            Text(viewModel.validationMessage)
         }
         .fullScreenCover(isPresented: $viewModel.showCompleteView) {
             ShareCompleteView {

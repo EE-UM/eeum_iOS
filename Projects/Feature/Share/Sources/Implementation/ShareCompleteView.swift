@@ -12,42 +12,46 @@ public struct ShareCompleteView: View {
     
     public var body: some View {
         VStack(spacing: 0) {
-            // Content - 여기에 UI 구현
+            // 상단 이미지
+            Image("shareComplete")
+                .clipped()
+                .padding(.top, 80)
+
             Spacer()
-            
-            VStack(spacing: 24) {
-                Image("shareComplete")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 120, height: 120)
-                
+
+            // 텍스트
+            VStack(spacing: 16) {
                 Text("나의 이야기 공유 완료!")
-                    .font(.helvetica(size: 28, weight: .bold))
+                    .font(.pretendard(size: 18, weight: .semiBold))
                     .foregroundColor(.textPrimary)
-                
-                Text("이제 기다릴 시간이에요.\n친구들이 당신의 이야기에 어울리는 음악을 얹고 있어요.\n다 완성되면,\n세상에 단 하나뿐인 플레이리스트가 도착합니다.")
-                    .font(.helvetica(size: 16, weight: .regular))
-                    .multilineTextAlignment(.leading)
+
+                Text("이제 기다릴 시간이에요.\n친구들이 당신의 이야기에 어울리는 음악을 얹고 있어요.\n다 완성되면, 세상에 단 하나뿐인 플레이리스트가 도착합니다.")
+                    .font(.pretendard(size: 14, weight: .regular))
+                    .foregroundColor(.textPrimary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
             }
-            
-            Spacer()
-            
-            // Home Button
+            .padding(.horizontal, 32)
+            .padding(.bottom, 200)
+
+
             Button {
                 onHome()
             } label: {
-                Text("Home")
+                Text("홈으로")
                     .font(.helvetica(size: 18, weight: .regular))
                     .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 48)
                     .frame(height: 56)
-                    .background(Color.textPrimary)
-                    .cornerRadius(28)
+                    .background(
+                        Capsule()
+                            .fill(Color.textPrimary)
+                    )
             }
-            .padding(.horizontal, 32)
-            .padding(.bottom, 32)
+            .padding(.bottom, 40)
         }
         .background(Color.mainBackground)
+        .ignoresSafeArea(edges: .top)
     }
 }
 

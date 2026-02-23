@@ -55,7 +55,7 @@ struct IngCardStackView: View {
             // View 버튼 - 하단 고정
             if let post = currentPost, let postId = post.postId {
                 NavigationLink {
-                    postDetailBuilder.makePostDetailView(postId: postId)
+                    postDetailBuilder.makePostDetailView(postId: postId, source: .feed)
                 } label: {
                     Text("View")
                         .font(.pretendard(size: 16, weight: .semiBold))
@@ -109,6 +109,7 @@ struct StackedCarousel: View {
     @Binding var activePostId: String?
     let postDetailBuilder: PostDetailBuildable
     let onLoadMore: () -> Void
+    @ObservedObject private var audioPlayer = AudioPlayerService.shared
 
     private let maxImageSide: CGFloat = 280
     private let spacing: CGFloat = 16
@@ -184,15 +185,17 @@ struct StackedCarousel: View {
                         .stroke(Color.white.opacity(0.4), lineWidth: 1)
                 )
 
-                // 일시정지 버튼
+                // 재생/일시정지 버튼
                 Button(action: {
-                    // TODO: 재생/일시정지 로직
+                    if let url = post.appleMusicUrl, !url.isEmpty {
+                        audioPlayer.toggle(url: url)
+                    }
                 }) {
                     Circle()
                         .fill(Color.black.opacity(0.6))
                         .frame(width: 40, height: 40)
                         .overlay(
-                            Image(systemName: "pause.fill")
+                            Image(systemName: audioPlayer.isCurrentlyPlaying(url: post.appleMusicUrl ?? "") ? "pause.fill" : "play.fill")
                                 .font(.system(size: 16))
                                 .foregroundColor(.white)
                         )

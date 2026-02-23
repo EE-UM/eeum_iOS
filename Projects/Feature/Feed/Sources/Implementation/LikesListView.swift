@@ -34,7 +34,7 @@ public struct LikesListView: View {
                         ForEach(Array(viewModel.likedPosts.enumerated()), id: \.offset) { _, post in
                             if let postId = post.postId {
                                 NavigationLink {
-                                    postDetailBuilder.makePostDetailView(postId: postId)
+                                    postDetailBuilder.makePostDetailView(postId: postId, source: .feed)
                                 } label: {
                                     MyPostCard(post: post, showsHeart: true)
                                 }

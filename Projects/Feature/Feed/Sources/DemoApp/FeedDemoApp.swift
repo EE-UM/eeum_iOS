@@ -20,7 +20,7 @@ struct MockShareBuilder: ShareBuildable {
 }
 
 struct MockPostDetailBuilder: PostDetailBuildable {
-    func makePostDetailView(postId: String) -> AnyView {
+    func makePostDetailView(postId: String, source: NavigationSource) -> AnyView {
         AnyView(Text("Mock Post Detail View for post \(postId)"))
     }
 }
