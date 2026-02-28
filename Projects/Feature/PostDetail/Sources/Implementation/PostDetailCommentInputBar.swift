@@ -55,20 +55,36 @@ struct SheetCommentInputBar: View {
     @FocusState var isCommentFocused: Bool
     let selectedMusicTitle: String?
     let selectedMusicArtworkURL: String?
+    let selectedMusicSongName: String?
+    let selectedMusicArtistName: String?
     let onTapAddMusic: () -> Void
     let onSend: () -> Void
     let onRemoveMusic: (() -> Void)?
 
+    init(
+        commentText: Binding<String>,
+        isCommentFocused: FocusState<Bool>,
+        selectedMusicTitle: String?,
+        selectedMusicArtworkURL: String?,
+        selectedMusicSongName: String? = nil,
+        selectedMusicArtistName: String? = nil,
+        onTapAddMusic: @escaping () -> Void,
+        onSend: @escaping () -> Void,
+        onRemoveMusic: (() -> Void)?
+    ) {
+        self._commentText = commentText
+        self._isCommentFocused = isCommentFocused
+        self.selectedMusicTitle = selectedMusicTitle
+        self.selectedMusicArtworkURL = selectedMusicArtworkURL
+        self.selectedMusicSongName = selectedMusicSongName
+        self.selectedMusicArtistName = selectedMusicArtistName
+        self.onTapAddMusic = onTapAddMusic
+        self.onSend = onSend
+        self.onRemoveMusic = onRemoveMusic
+    }
+
     var body: some View {
         VStack(spacing: 8) {
-            if let selectedMusicTitle {
-                MusicAttachmentRow(
-                    title: selectedMusicTitle,
-                    artworkURL: selectedMusicArtworkURL,
-                    onRemove: onRemoveMusic
-                )
-            }
-
             HStack(spacing: 8) {
                 Button(action: onTapAddMusic) {
                     Image(systemName: "plus.circle.fill")
@@ -76,13 +92,47 @@ struct SheetCommentInputBar: View {
                         .foregroundColor(.black)
                 }
 
-                TextField(inputPlaceholder, text: $commentText)
-                    .font(.system(size: 13))
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 14)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(20)
-                    .focused($isCommentFocused)
+                // 입력 영역 (음악 태그 + 텍스트)
+                VStack(alignment: .leading, spacing: 6) {
+                    if selectedMusicTitle != nil {
+                        HStack(spacing: 6) {
+                            if let songName = selectedMusicSongName {
+                                Text(songName)
+                                    .font(.pretendard(size: 13, weight: .bold))
+                                    .foregroundColor(.textPrimary)
+                                    .lineLimit(1)
+                            }
+
+                            if let artistName = selectedMusicArtistName, !artistName.isEmpty {
+                                Text(artistName)
+                                    .font(.pretendard(size: 13, weight: .regular))
+                                    .foregroundColor(.textFootnote)
+                                    .lineLimit(1)
+                            }
+
+                            if let onRemoveMusic {
+                                Button(action: onRemoveMusic) {
+                                    Image(systemName: "xmark")
+                                        .font(.system(size: 11, weight: .medium))
+                                        .foregroundColor(.textFootnote)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.contentBackground)
+                        .clipShape(Capsule())
+                    }
+
+                    TextField(inputPlaceholder, text: $commentText, axis: .vertical)
+                        .font(.system(size: 13))
+                        .lineLimit(1...5)
+                        .focused($isCommentFocused)
+                }
+                .padding(.vertical, 10)
+                .padding(.horizontal, 14)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(20)
 
                 Button(action: onSend) {
                     Image("send")

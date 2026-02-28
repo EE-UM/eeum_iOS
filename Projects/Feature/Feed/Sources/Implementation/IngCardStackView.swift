@@ -20,13 +20,11 @@ struct IngCardStackView: View {
                     EmptyIngView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    StackedCarousel(
+                    IngPagerView(
                         posts: $posts,
                         activePostId: $currentPostId,
-                        postDetailBuilder: postDetailBuilder,
                         onLoadMore: onSwipe
                     )
-                    .padding(.top, 4)
 
                     if let post = currentPost {
                         VStack(alignment: .leading, spacing: 8) {
@@ -52,12 +50,11 @@ struct IngCardStackView: View {
                 }
             }
 
-            // View 버튼 - 하단 고정
             if let post = currentPost, let postId = post.postId {
                 NavigationLink {
                     postDetailBuilder.makePostDetailView(postId: postId, source: .feed)
                 } label: {
-                    Text("View")
+                    Text("view")
                         .font(.pretendard(size: 16, weight: .semiBold))
                         .foregroundColor(.white)
                         .padding(.vertical, 14)
@@ -104,177 +101,86 @@ struct IngCardStackView: View {
     }
 }
 
-struct StackedCarousel: View {
+// MARK: - Pager
+
+private struct IngPagerView: View {
     @Binding var posts: [Post]
     @Binding var activePostId: String?
-    let postDetailBuilder: PostDetailBuildable
     let onLoadMore: () -> Void
     @ObservedObject private var audioPlayer = AudioPlayerService.shared
 
-    private let maxImageSide: CGFloat = 280
-    private let spacing: CGFloat = 16
-
-    private var postIdentifiers: [String] {
-        posts.enumerated().map { "\($0.offset)-\($0.element.postId ?? "nil")" }
-    }
-
     var body: some View {
         GeometryReader { geometry in
-            let availableWidth = max(geometry.size.width - 48, 220)
-            let tentativeWidth = availableWidth * 0.85
-            let cardWidth = max(220, min(maxImageSide, tentativeWidth))
-            let horizontalPadding = max(0, (geometry.size.width - cardWidth) / 2)
+            let cardWidth = geometry.size.width - 80
+            let cardHeight = cardWidth
+            let leadingPadding = CGFloat(24)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: spacing) {
-                    ForEach(Array(posts.enumerated()), id: \.offset) { entry in
-                        if let cardId = entry.element.postId {
-                            carouselCard(
-                                for: entry.element,
-                                id: cardId,
-                                containerWidth: geometry.size.width,
-                                cardWidth: cardWidth
-                            )
-                            .frame(width: cardWidth)
-                            .id(cardId)
+                LazyHStack(spacing: 12) {
+                    ForEach(Array(posts.enumerated()), id: \.offset) { _, post in
+                        if let cardId = post.postId {
+                            pagerCard(post: post, cardWidth: cardWidth, cardHeight: cardHeight)
+                                .frame(width: cardWidth)
+                                .id(cardId)
                         }
                     }
                 }
                 .scrollTargetLayout()
-                .padding(.horizontal, horizontalPadding)
+                .padding(.leading, leadingPadding)
+                .padding(.trailing, 56)
             }
             .scrollTargetBehavior(.viewAligned)
-            .scrollPosition(id: $activePostId, anchor: .center)
-            .onAppear(perform: configureInitialSelection)
-            .onChange(of: postIdentifiers) { _ in
-                syncSelectionWithPosts()
-            }
+            .scrollPosition(id: $activePostId, anchor: .leading)
             .onChange(of: activePostId) { newValue in
                 guard let newValue, let index = posts.firstIndex(where: { $0.postId == newValue }) else { return }
                 if index >= posts.count - 2 {
                     onLoadMore()
                 }
             }
-            .frame(height: cardWidth + 60)
+            .frame(height: cardHeight)
         }
-        .frame(maxHeight: maxImageSide + 60)
+        .frame(height: UIScreen.main.bounds.width - 80)
     }
 
     @ViewBuilder
-    private func carouselCard(for post: Post, id: String, containerWidth: CGFloat, cardWidth: CGFloat) -> some View {
-        GeometryReader { geometryProxy in
-            let normalized = normalizedDelta(for: geometryProxy, containerWidth: containerWidth)
-
-            ZStack(alignment: .topTrailing) {
-                // 이미지
-                AsyncImage(url: URL(string: post.artworkUrl ?? "")) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    default:
-                        Color.gray.opacity(0.3)
-                    }
+    private func pagerCard(post: Post, cardWidth: CGFloat, cardHeight: CGFloat) -> some View {
+        ZStack(alignment: .bottomLeading) {
+            // Artwork
+            AsyncImage(url: URL(string: post.artworkUrl ?? "")) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                default:
+                    Color.gray.opacity(0.3)
                 }
-                .frame(width: cardWidth, height: cardWidth)
-                .clipped()
-                .clipShape(RoundedRectangle(cornerRadius: 24))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(Color.white.opacity(0.4), lineWidth: 1)
-                )
+            }
+            .frame(width: cardWidth, height: cardHeight)
+            .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: 4))
 
-                // 재생/일시정지 버튼
-                Button(action: {
-                    if let url = post.appleMusicUrl, !url.isEmpty {
-                        audioPlayer.toggle(url: url)
-                    }
-                }) {
-                    Circle()
-                        .fill(Color.black.opacity(0.6))
-                        .frame(width: 40, height: 40)
-                        .overlay(
-                            Image(systemName: audioPlayer.isCurrentlyPlaying(url: post.appleMusicUrl ?? "") ? "pause.fill" : "play.fill")
-                                .font(.system(size: 16))
-                                .foregroundColor(.white)
-                        )
+            // Play/Pause button
+            Button {
+                if let url = post.appleMusicUrl, !url.isEmpty {
+                    audioPlayer.toggle(url: url)
                 }
-                .padding(.top, 24)
-                .padding(.trailing, 24)
+            } label: {
+                Circle()
+                    .fill(Color.black.opacity(0.6))
+                    .frame(width: 36, height: 36)
+                    .overlay(
+                        Image(systemName: audioPlayer.isCurrentlyPlaying(url: post.appleMusicUrl ?? "") ? "pause.fill" : "play.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.white)
+                    )
             }
-            .frame(width: cardWidth, height: cardWidth)
-            .onTapGesture {
-                // NavigationLink로 이동하는 동작은 여기서 처리 필요시 추가
-            }
-            .shadow(color: Color.black.opacity(0.18 * normalized), radius: 18, x: 0, y: 12)
-            .buttonStyle(PlainButtonStyle())
-            .scaleEffect(scale(for: normalized))
-            .opacity(opacity(for: normalized))
-            .zIndex(Double(normalized))
-            .offset(y: yOffset(for: normalized))
+            .buttonStyle(.plain)
+            .padding(.leading, 12)
+            .padding(.bottom, 12)
         }
-        .frame(height: cardWidth)
-    }
-
-    private func configureInitialSelection() {
-        guard !posts.isEmpty else {
-            activePostId = nil
-            return
-        }
-
-        let index = currentActiveIndex() ?? 0
-        updateActivePost(for: index)
-    }
-
-    private func syncSelectionWithPosts() {
-        guard !posts.isEmpty else {
-            activePostId = nil
-            return
-        }
-
-        let index = currentActiveIndex() ?? 0
-        updateActivePost(for: index)
-    }
-
-    private func updateActivePost(for index: Int) {
-        guard posts.indices.contains(index) else { return }
-        if let id = posts[index].postId {
-            activePostId = id
-        }
-
-        if index >= posts.count - 2 {
-            onLoadMore()
-        }
-    }
-
-    private func currentActiveIndex() -> Int? {
-        guard let targetId = activePostId ?? posts.first?.postId else { return nil }
-        return posts.firstIndex { $0.postId == targetId }
-    }
-
-    private func normalizedDelta(for geometryProxy: GeometryProxy, containerWidth: CGFloat) -> CGFloat {
-        let frame = geometryProxy.frame(in: .global)
-        let centerX = containerWidth / 2
-        let delta = frame.midX - centerX
-        let normalized = 1 - min(1, abs(delta / centerX))
-        return max(0, normalized)
-    }
-
-    private func scale(for normalized: CGFloat) -> CGFloat {
-        0.8 + normalized * 0.35
-    }
-
-    private func opacity(for normalized: CGFloat) -> Double {
-        Double(0.5 + normalized * 0.5)
-    }
-
-    private func yOffset(for normalized: CGFloat) -> CGFloat {
-        let maxLift: CGFloat = 20
-        return (1 - normalized) * maxLift
     }
 }
-
 
 struct EmptyIngView: View {
     var body: some View {

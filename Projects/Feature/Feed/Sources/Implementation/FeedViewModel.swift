@@ -15,7 +15,9 @@ public final class FeedViewModel: ObservableObject {
     @Published var myPosts: [Post] = []
     @Published var likedPosts: [Post] = []
     @Published var commentedPosts: [Post] = []
-    @Published var isLoading: Bool = false
+    @Published var isLoadingIng: Bool = false
+    @Published var isLoadingDone: Bool = false
+    @Published var isLoadingMyPosts: Bool = false
     @Published var isLoadingLikedPosts: Bool = false
     @Published var isLoadingCommentedPosts: Bool = false
     @Published var errorMessage: String?
@@ -44,9 +46,9 @@ public final class FeedViewModel: ObservableObject {
 
     @MainActor
     func loadIngPosts() {
-        guard !isLoading && hasMoreIngPosts else { return }
+        guard !isLoadingIng && hasMoreIngPosts else { return }
 
-        isLoading = true
+        isLoadingIng = true
         errorMessage = nil
 
         Task { [weak self] in
@@ -76,12 +78,12 @@ public final class FeedViewModel: ObservableObject {
                             self.lastIngPostId = postIdInt
                         }
                     }
-                    self.isLoading = false
+                    self.isLoadingIng = false
                 }
             } catch {
                 await MainActor.run {
                     self.errorMessage = error.localizedDescription
-                    self.isLoading = false
+                    self.isLoadingIng = false
                 }
             }
         }
@@ -89,9 +91,9 @@ public final class FeedViewModel: ObservableObject {
 
     @MainActor
     func loadDonePosts() {
-        guard !isLoading && hasMoreDonePosts else { return }
+        guard !isLoadingDone && hasMoreDonePosts else { return }
 
-        isLoading = true
+        isLoadingDone = true
         errorMessage = nil
 
         Task { [weak self] in
@@ -121,12 +123,12 @@ public final class FeedViewModel: ObservableObject {
                             self.lastDonePostId = postIdInt
                         }
                     }
-                    self.isLoading = false
+                    self.isLoadingDone = false
                 }
             } catch {
                 await MainActor.run {
                     self.errorMessage = error.localizedDescription
-                    self.isLoading = false
+                    self.isLoadingDone = false
                 }
             }
         }
@@ -219,9 +221,9 @@ public final class FeedViewModel: ObservableObject {
 
     @MainActor
     func loadMyPosts() {
-        guard !isLoading else { return }
+        guard !isLoadingMyPosts else { return }
 
-        isLoading = true
+        isLoadingMyPosts = true
         errorMessage = nil
 
         Task { [weak self] in
@@ -231,12 +233,12 @@ public final class FeedViewModel: ObservableObject {
 
                 await MainActor.run {
                     self.myPosts = posts
-                    self.isLoading = false
+                    self.isLoadingMyPosts = false
                 }
             } catch {
                 await MainActor.run {
                     self.errorMessage = error.localizedDescription
-                    self.isLoading = false
+                    self.isLoadingMyPosts = false
                 }
             }
         }

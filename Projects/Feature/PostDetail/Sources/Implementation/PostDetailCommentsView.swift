@@ -38,6 +38,8 @@ struct CommentSheet: View {
                 isCommentFocused: _isCommentFocused,
                 selectedMusicTitle: viewModel.selectedMusicDisplayText,
                 selectedMusicArtworkURL: viewModel.selectedMusic?.artworkUrl,
+                selectedMusicSongName: viewModel.selectedMusic?.songName,
+                selectedMusicArtistName: viewModel.selectedMusic?.artistName,
                 onTapAddMusic: onTapAddMusic,
                 onSend: {
                     let trimmed = commentText.trimmingCharacters(in: .whitespacesAndNewlines)

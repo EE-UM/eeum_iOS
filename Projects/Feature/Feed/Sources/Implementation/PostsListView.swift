@@ -26,7 +26,7 @@ public struct PostsListView: View {
                 )
 
 
-                if viewModel.myPosts.isEmpty && !viewModel.isLoading {
+                if viewModel.myPosts.isEmpty && !viewModel.isLoadingMyPosts {
                     EmptyInboxListView(message: "작성한 사연이 없습니다")
                         .frame(maxWidth: .infinity)
                         .padding(.top, 60)

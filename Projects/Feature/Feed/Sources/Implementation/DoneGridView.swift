@@ -116,25 +116,32 @@ struct DonePostCardContent: View {
 
             // 사연 제목
             Text(post.title ?? "제목 없음")
-                .font(.system(size: 13, weight: .semibold))
+                .font(.pretendard(size: 14, weight: .medium))
                 .foregroundColor(Color.textPrimary)
                 .lineLimit(1)
                 .padding(.top, 8)
                 .padding(.horizontal, 4)
 
-            // 노래명
-            if let songName = post.songName {
-                Text(songName)
-                    .font(.system(size: 11))
-                    .foregroundColor(Color.textFootnote)
-                    .lineLimit(1)
-                    .padding(.horizontal, 4)
-                    .padding(.bottom, 4)
+            // 곡 이름 + 가수 이름
+            HStack(spacing: 4) {
+                if let songName = post.songName {
+                    Text(songName)
+                        .font(.pretendard(size: 12, weight: .regular))
+                        .foregroundColor(Color.textPrimary)
+                        .lineLimit(1)
+                }
+                if let artistName = post.artistName {
+                    Text(artistName)
+                        .font(.pretendard(size: 12, weight: .regular))
+                        .foregroundColor(Color.textFootnote)
+                        .lineLimit(1)
+                }
             }
+            .padding(.horizontal, 4)
+            .padding(.bottom, 4)
         }
-        .background(Color.contentBackground)
+        .background(Color.clear)
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
 }
 

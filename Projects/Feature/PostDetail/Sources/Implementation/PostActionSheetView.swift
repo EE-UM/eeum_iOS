@@ -8,37 +8,40 @@ struct PostActionSheetView: View {
     let onDelete: () -> Void
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 0) {
             Capsule()
                 .fill(Color.textFootnote.opacity(0.4))
                 .frame(width: 48, height: 4)
                 .padding(.top, 12)
+                .padding(.bottom, 24)
 
-            VStack(alignment: .leading, spacing: 16) {
-                Text("게시글 관리")
-                    .font(.pretendard(size: 20, weight: .semiBold))
-                    .foregroundColor(.textPrimary)
-
-                actionButton(
+            VStack(spacing: 0) {
+                actionRow(
+                    icon: "pencil",
                     title: "수정",
-                    description: "사연 내용을 다시 손볼 수 있어요.",
                     action: onEdit
                 )
 
-                actionButton(
+                Divider()
+
+                actionRow(
+                    icon: "checkmark.seal",
                     title: "완료 처리",
-                    description: "플레이리스트 완료 상태로 변경합니다.",
                     action: onComplete
                 )
 
-                actionButton(
+                Divider()
+
+                actionRow(
+                    icon: "trash",
                     title: "삭제",
-                    description: "사연을 완전히 삭제합니다.",
-                    role: .destructive,
+                    isDestructive: true,
                     action: onDelete
                 )
             }
-            .padding(.horizontal, 24)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal, 20)
 
             Spacer(minLength: 0)
         }
@@ -55,29 +58,28 @@ struct PostActionSheetView: View {
     }
 
     @ViewBuilder
-    private func actionButton(
+    private func actionRow(
+        icon: String,
         title: String,
-        description: String,
-        role: ButtonRole? = nil,
+        isDestructive: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
-        Button(role: role) {
+        Button {
             action()
         } label: {
-            VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 18))
+                    .foregroundColor(isDestructive ? .red : .textPrimary)
+
                 Text(title)
-                    .font(.pretendard(size: 18, weight: .semiBold))
-                    .foregroundColor(role == .destructive ? .red : .textPrimary)
-                Text(description)
-                    .font(.pretendard(size: 13, weight: .regular))
-                    .foregroundColor(.textFootnote)
+                    .font(.pretendard(size: 16, weight: .medium))
+                    .foregroundColor(isDestructive ? .red : .textPrimary)
+
+                Spacer()
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.contentBackground)
-            )
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
         }
         .buttonStyle(.plain)
     }

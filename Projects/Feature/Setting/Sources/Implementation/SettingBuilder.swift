@@ -1,6 +1,6 @@
 import SwiftUI
 import SettingInterface
-import Domain
+import DesignSystem
 
 public struct SettingBuilder: SettingBuildable {
 
@@ -12,35 +12,72 @@ public struct SettingBuilder: SettingBuildable {
 }
 
 private struct SettingView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
-        Form {
-            Section(header: Text("Account")) {
-                SettingRow(title: "Status", subtitle: "Active")
-                SettingRow(title: "Notifications", subtitle: "Enabled")
+        VStack(spacing: 0) {
+            settingRow(title: "FAQ") {
+                if let url = URL(string: "https://www.notion.so/220a8ad06b41800886aedbe718fa6c3c") {
+                    openURL(url)
+                }
             }
-            Section(header: Text("About")) {
-                SettingRow(title: "Version", subtitle: "1.0.0")
+
+            settingRow(title: "Contacts us") {
+                if let url = URL(string: "mailto:eeum.app@gmail.com") {
+                    openURL(url)
+                }
+            }
+
+            settingRow(title: "Terms of services") {
+                if let url = URL(string: "https://www.notion.so/220a8ad06b41800886aedbe718fa6c3c") {
+                    openURL(url)
+                }
+            }
+
+            settingRow(title: "Privacy Policy") {
+                if let url = URL(string: "https://www.notion.so/220a8ad06b41800886aedbe718fa6c3c") {
+                    openURL(url)
+                }
+            }
+
+            Spacer()
+        }
+        .padding(.top, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.mainBackground)
+        .navigationTitle("Settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.textPrimary)
+                }
             }
         }
-        .scrollContentBackground(.hidden)
-        .background(Color(.systemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
-}
 
-private struct SettingRow: View {
-    let title: String
-    let subtitle: String
+    @ViewBuilder
+    private func settingRow(title: String, action: @escaping () -> Void) -> some View {
+        Button {
+            action()
+        } label: {
+            HStack {
+                Text(title)
+                    .font(.pretendard(size: 16, weight: .medium))
+                    .foregroundColor(.textPrimary)
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.body)
-            Text(subtitle)
-                .font(.footnote)
-                .foregroundColor(.secondary)
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 18)
         }
-        .padding(.vertical, 4)
+        .buttonStyle(.plain)
     }
+
 }

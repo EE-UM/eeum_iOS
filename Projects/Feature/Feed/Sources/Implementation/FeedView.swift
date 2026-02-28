@@ -65,15 +65,13 @@ struct FeedView: View {
                     HStack(spacing: 4) {
                         Text("Inbox")
                             .font(.system(size: 15, weight: .medium))
-                            .foregroundColor(Color.textPrimary)
                         Image(systemName: "arrow.up.right")
                             .font(.system(size: 13))
-                            .foregroundColor(Color.textPrimary)
                     }
+                    .foregroundColor(Color.textPrimary)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
-                    .background(Color.contentBackground)
-                    .cornerRadius(20)
+                    .modifier(InboxButtonStyle())
                 }
             }
         }
@@ -86,7 +84,7 @@ private struct FeedTabSelector: View {
     @ObservedObject var viewModel: FeedViewModel
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 20) {
             TabButton(
                 title: "Ing",
                 isSelected: viewModel.selectedTab == .ing,
@@ -120,6 +118,20 @@ private struct FeedTabSelector: View {
     }
 }
 
+private struct InboxButtonStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content
+                .glassEffect(.regular.interactive())
+                .clipShape(Capsule())
+        } else {
+            content
+                .background(Color.contentBackground)
+                .cornerRadius(20)
+        }
+    }
+}
+
 private struct TabButton: View {
     let title: String
     let isSelected: Bool
@@ -127,12 +139,9 @@ private struct TabButton: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 4) {
-                Text(title)
-                    .font(.system(size: 18, weight: isSelected ? .bold : .medium))
-                    .foregroundColor(isSelected ? Color.textPrimary : Color.textFootnote)
-            }
+            Text(title)
+                .font(.custom("Helvetica-Bold", size: 28))
+                .foregroundColor(isSelected ? Color.textPrimary : Color.textFootnote)
         }
-        .frame(width: 80)
     }
 }

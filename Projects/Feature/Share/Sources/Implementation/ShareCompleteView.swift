@@ -41,7 +41,7 @@ public struct ShareCompleteView: View {
                 Text("홈으로")
                     .font(.helvetica(size: 18, weight: .regular))
                     .foregroundColor(.white)
-                    .padding(.horizontal, 48)
+                    .padding(.horizontal, 24)
                     .frame(height: 56)
                     .background(
                         Capsule()

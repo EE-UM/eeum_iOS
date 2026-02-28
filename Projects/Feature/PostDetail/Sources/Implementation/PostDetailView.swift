@@ -162,8 +162,8 @@ struct PostDetailView: View {
                     viewModel.deletePost()
                 }
             )
-            .presentationDetents([.fraction(1.0/3.0)])
-            .presentationDragIndicator(.visible)
+            .presentationDetents([.fraction(0.3)])
+            .presentationDragIndicator(.hidden)
         }
         .sheet(isPresented: $isShowingEditSheet) {
             if let detail = viewModel.postDetail {
@@ -270,16 +270,17 @@ struct PostDetailView: View {
                     .padding(.top, 12)
 
                 Button(action: onToggleCommentsList) {
-                    HStack {
+                    HStack(spacing: 8) {
                         Image(isShowingCommentsList ? "musicbox" : "list")
-                            .font(.system(size: 16))
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
                         Text(isShowingCommentsList ? "커버보기" : "글보기")
-                            .font(.system(size: 16, weight: .medium))
+                            .font(.pretendard(size: 16, weight: .medium))
                     }
                     .foregroundColor(.black)
                     .padding(.vertical, 12)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .cornerRadius(8)
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 20)
