@@ -140,6 +140,9 @@ private struct IngPagerView: View {
             .frame(height: cardHeight)
         }
         .frame(height: UIScreen.main.bounds.width - 80)
+        .onDisappear {
+            audioPlayer.stop()
+        }
     }
 
     @ViewBuilder

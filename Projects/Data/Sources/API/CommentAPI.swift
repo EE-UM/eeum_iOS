@@ -14,7 +14,7 @@ public enum CommentAPI {
     case postComment(content: String, albumName: String, songName: String, artistName: String, artworkUrl: String, appleMusicUrl: String, postId: Int)
     case updateComment(commentId: Int, content: String)
     case deleteComment(commentId: Int)
-
+    case reportComment(commentId: Int, reportedUserId: Int, reportReason: String)
 }
 
 extension CommentAPI: TargetType, AccessTokenAuthorizable {
@@ -36,6 +36,8 @@ extension CommentAPI: TargetType, AccessTokenAuthorizable {
             return "/comments/\(commentId)"
         case .postComment:
             return "/comments"
+        case .reportComment:
+            return "/report/comment"
         }
     }
 
@@ -49,6 +51,8 @@ extension CommentAPI: TargetType, AccessTokenAuthorizable {
             return .put
         case .deleteComment:
             return .delete
+        case .reportComment:
+            return .post
         }
     }
 
@@ -69,6 +73,12 @@ extension CommentAPI: TargetType, AccessTokenAuthorizable {
         case let .updateComment(_, content):
             return .requestParameters(parameters: [
                 "content" : content
+            ], encoding: JSONEncoding.default)
+        case let .reportComment(commentId, reportedUserId, reportReason):
+            return .requestParameters(parameters: [
+                "commentId": commentId,
+                "reportedUserId": reportedUserId,
+                "reportReason": reportReason
             ], encoding: JSONEncoding.default)
         }
     }

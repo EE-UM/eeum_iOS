@@ -21,6 +21,7 @@ public protocol CommentUseCase {
     func getComments(postId: Int64) async throws -> [Comment]
     func updateComment(commentId: Int64, content: String) async throws
     func deleteComment(commentId: Int64) async throws
+    func reportComment(commentId: Int64, reportedUserId: Int64, reportReason: String) async throws
 }
 
 public final class DefaultCommentUseCase: CommentUseCase {
@@ -60,5 +61,9 @@ public final class DefaultCommentUseCase: CommentUseCase {
 
     public func deleteComment(commentId: Int64) async throws {
         try await repository.deleteComment(commentId: commentId)
+    }
+
+    public func reportComment(commentId: Int64, reportedUserId: Int64, reportReason: String) async throws {
+        try await repository.reportComment(commentId: commentId, reportedUserId: reportedUserId, reportReason: reportReason)
     }
 }

@@ -23,6 +23,7 @@ public struct SearchView: View {
     @State private var searchText: String = ""
     @State private var musics: [Music] = []
     @State private var isSearching: Bool = false
+    @FocusState private var isSearchFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
     private let musicSearchUseCase: MusicSearchUseCase
@@ -50,12 +51,13 @@ public struct SearchView: View {
 
                 TextField("", text: $searchText)
                     .font(.body)
+                    .focused($isSearchFocused)
                     .onSubmit {
                         performSearch()
                     }
             }
             .padding()
-            .background(Color(.systemBackground))
+            .background(Color.contentBackground)
 
             // Music List
             if isSearching {
@@ -72,10 +74,20 @@ public struct SearchView: View {
                         }
                     }
                 }
+                .scrollDismissesKeyboard(.interactively)
             }
         }
         .background(Color.mainBackground)
         .navigationBarHidden(true)
+        .onTapGesture {
+            isSearchFocused = false
+        }
+        .enableSwipeBack()
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                isSearchFocused = true
+            }
+        }
     }
 
     private func performSearch() {
@@ -135,7 +147,7 @@ struct MusicRow: View {
             .padding(.horizontal)
             .padding(.vertical, 12)
         }
-        .background(Color(.systemBackground))
+        .background(Color.mainBackground)
     }
 }
 

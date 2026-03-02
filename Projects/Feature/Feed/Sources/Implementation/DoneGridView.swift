@@ -140,7 +140,7 @@ struct DonePostCardContent: View {
             .padding(.horizontal, 4)
             .padding(.bottom, 4)
         }
-        .background(Color.clear)
+        .background(Color.mainBackground)
         .cornerRadius(12)
     }
 }

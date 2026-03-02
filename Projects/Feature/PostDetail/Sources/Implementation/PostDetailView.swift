@@ -11,7 +11,7 @@ struct PostDetailView: View {
     @State private var showPostActionSheet: Bool = false
     @State private var isShowingEditSheet: Bool = false
     @State private var showCommentSheet: Bool = false
-    @State private var selectedCommentForReport: Comment?
+    @State private var expandedCommentId: String?
     @State private var commentToReport: Comment?
     @State private var showReportReasonView: Bool = false
 
@@ -47,8 +47,11 @@ struct PostDetailView: View {
                                 isCommentPlaying: { url in
                                     viewModel.isPlaying(url: url)
                                 },
-                                onLongPressComment: { comment in
-                                    selectedCommentForReport = comment
+                                expandedCommentId: $expandedCommentId,
+                                onReportComment: { comment in
+                                    commentToReport = comment
+                                    expandedCommentId = nil
+                                    showReportReasonView = true
                                 }
                             )
                             .padding(.bottom, 40)
@@ -58,42 +61,33 @@ struct PostDetailView: View {
                         }
                     }
                 }
-
-                CommentInputBar(
-                    selectedMusicTitle: viewModel.selectedMusicDisplayText,
-                    selectedMusicArtworkURL: viewModel.selectedMusic?.artworkUrl,
-                    onTapAddMusic: {
-                        openMusicSearch()
-                    },
-                    onTapInput: {
-                        showCommentSheet = true
-                    },
-                    onRemoveMusic: {
-                        viewModel.clearSelectedMusic()
-                    }
-                )
-            }
-
-            // 댓글 신고 오버레이
-            if let comment = selectedCommentForReport {
-                CommentReportOverlay(
-                    comment: comment,
-                    isPlaying: viewModel.isPlaying(url: comment.appleMusicUrl ?? ""),
-                    onPlay: {
-                        if let url = comment.appleMusicUrl {
-                            viewModel.playComment(url: url)
+                .onTapGesture {
+                    if expandedCommentId != nil {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            expandedCommentId = nil
                         }
-                    },
-                    onReport: {
-                        commentToReport = comment
-                        selectedCommentForReport = nil
-                        showReportReasonView = true
-                    },
-                    onDismiss: {
-                        selectedCommentForReport = nil
                     }
-                )
+                }
+
+                if !viewModel.isMyPost {
+                    CommentInputBar(
+                        selectedMusicTitle: viewModel.selectedMusicDisplayText,
+                        selectedMusicArtworkURL: viewModel.selectedMusic?.artworkUrl,
+                        onTapAddMusic: {
+                            openMusicSearch()
+                        },
+                        onTapInput: {
+                            showCommentSheet = true
+                        },
+                        onRemoveMusic: {
+                            viewModel.clearSelectedMusic()
+                        }
+                    )
+                    .opacity(expandedCommentId != nil ? 0.3 : 1.0)
+                    .allowsHitTesting(expandedCommentId == nil)
+                }
             }
+
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
@@ -139,6 +133,9 @@ struct PostDetailView: View {
         .onAppear {
             viewModel.loadPostDetail()
         }
+        .onDisappear {
+            viewModel.stopPlayback()
+        }
         .onChange(of: viewModel.didDeletePost) { didDelete in
             if didDelete {
                 dismiss()
@@ -182,11 +179,12 @@ struct PostDetailView: View {
                         openMusicSearch()
                     }
                 },
-                onLongPressComment: { comment in
+                onReportComment: { comment in
                     showCommentSheet = false
                     Task {
                         try? await Task.sleep(nanoseconds: 300_000_000)
-                        selectedCommentForReport = comment
+                        commentToReport = comment
+                        showReportReasonView = true
                     }
                 }
             )
@@ -198,9 +196,19 @@ struct PostDetailView: View {
         .fullScreenCover(isPresented: $showReportReasonView) {
             if let comment = commentToReport {
                 ReportReasonView(comment: comment) { reason, customText in
-                    print("Report submitted: \(reason.rawValue), custom: \(customText ?? "none")")
-                    commentToReport = nil
-                    // TODO: API 연동
+                    Task {
+                        let success = await viewModel.reportComment(
+                            comment: comment,
+                            reportReason: reason.rawValue,
+                            customText: customText
+                        )
+                        await MainActor.run {
+                            commentToReport = nil
+                            if success {
+                                print("✅ Report submitted successfully")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -214,12 +222,14 @@ struct PostDetailView: View {
         let onToggleCommentsList: () -> Void
         let onPlayComment: (String) -> Void
         let isCommentPlaying: (String) -> Bool
-        let onLongPressComment: (Comment) -> Void
+        @Binding var expandedCommentId: String?
+        let onReportComment: (Comment) -> Void
 
         var body: some View {
             VStack(spacing: 0) {
-                ZStack {
-                    AsyncImage(url: URL(string: detail.artworkUrl)) { image in
+                VStack(spacing: 0) {
+                    ZStack {
+                        AsyncImage(url: URL(string: detail.artworkUrl)) { image in
                         image
                             .resizable()
                             .scaledToFill()
@@ -284,6 +294,9 @@ struct PostDetailView: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 20)
+                }
+                .opacity(expandedCommentId != nil ? 0.3 : 1.0)
+                .allowsHitTesting(expandedCommentId == nil)
 
                 if let comments = detail.comments, !comments.isEmpty {
                     VStack(alignment: .leading, spacing: 16) {
@@ -293,15 +306,26 @@ struct PostDetailView: View {
                                     CommentListItem(
                                         comment: comment,
                                         isPlaying: isCommentPlaying(comment.appleMusicUrl ?? ""),
+                                        isActionExpanded: expandedCommentId == comment.commentId,
                                         onPlay: {
                                             if let url = comment.appleMusicUrl {
                                                 onPlayComment(url)
                                             }
                                         },
                                         onLongPress: {
-                                            onLongPressComment(comment)
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                if expandedCommentId == comment.commentId {
+                                                    expandedCommentId = nil
+                                                } else {
+                                                    expandedCommentId = comment.commentId
+                                                }
+                                            }
+                                        },
+                                        onReport: {
+                                            onReportComment(comment)
                                         }
                                     )
+                                    .opacity(expandedCommentId != nil && expandedCommentId != comment.commentId ? 0.3 : 1.0)
                                 }
                             }
                         } else {
@@ -310,15 +334,26 @@ struct PostDetailView: View {
                                     CommentCard(
                                         comment: comment,
                                         isPlaying: isCommentPlaying(comment.appleMusicUrl ?? ""),
+                                        isActionExpanded: expandedCommentId == comment.commentId,
                                         onPlay: {
                                             if let url = comment.appleMusicUrl {
                                                 onPlayComment(url)
                                             }
                                         },
                                         onLongPress: {
-                                            onLongPressComment(comment)
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                if expandedCommentId == comment.commentId {
+                                                    expandedCommentId = nil
+                                                } else {
+                                                    expandedCommentId = comment.commentId
+                                                }
+                                            }
+                                        },
+                                        onReport: {
+                                            onReportComment(comment)
                                         }
                                     )
+                                    .opacity(expandedCommentId != nil && expandedCommentId != comment.commentId ? 0.3 : 1.0)
                                 }
                             }
                         }

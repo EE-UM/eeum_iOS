@@ -1,4 +1,5 @@
 import SwiftUI
+import SafariServices
 import SettingInterface
 import DesignSystem
 
@@ -14,13 +15,12 @@ public struct SettingBuilder: SettingBuildable {
 private struct SettingView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @State private var safariURL: URL?
 
     var body: some View {
         VStack(spacing: 0) {
             settingRow(title: "FAQ") {
-                if let url = URL(string: "https://www.notion.so/220a8ad06b41800886aedbe718fa6c3c") {
-                    openURL(url)
-                }
+                safariURL = URL(string: "https://www.notion.so/220a8ad06b41800886aedbe718fa6c3c")
             }
 
             settingRow(title: "Contacts us") {
@@ -30,15 +30,11 @@ private struct SettingView: View {
             }
 
             settingRow(title: "Terms of services") {
-                if let url = URL(string: "https://www.notion.so/220a8ad06b41800886aedbe718fa6c3c") {
-                    openURL(url)
-                }
+                safariURL = URL(string: "https://www.notion.so/220a8ad06b41800886aedbe718fa6c3c")
             }
 
             settingRow(title: "Privacy Policy") {
-                if let url = URL(string: "https://www.notion.so/220a8ad06b41800886aedbe718fa6c3c") {
-                    openURL(url)
-                }
+                safariURL = URL(string: "https://www.notion.so/220a8ad06b41800886aedbe718fa6c3c")
             }
 
             Spacer()
@@ -60,6 +56,10 @@ private struct SettingView: View {
                 }
             }
         }
+        .fullScreenCover(item: $safariURL) { url in
+            SafariView(url: url)
+                .ignoresSafeArea()
+        }
     }
 
     @ViewBuilder
@@ -79,5 +79,19 @@ private struct SettingView: View {
         }
         .buttonStyle(.plain)
     }
+}
 
+// MARK: - In-App Safari
+extension URL: @retroactive Identifiable {
+    public var id: String { absoluteString }
+}
+
+private struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        SFSafariViewController(url: url)
+    }
+
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
 }

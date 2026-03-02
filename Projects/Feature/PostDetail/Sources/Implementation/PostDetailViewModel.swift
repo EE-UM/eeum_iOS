@@ -72,12 +72,11 @@ final class PostDetailViewModel: ObservableObject {
     func createComment(content: String) async {
         guard let postIdInt = Int64(postId) else { return }
 
-        let detail = postDetail
         let albumName = selectedMusic?.albumName ?? ""
-        let songName = selectedMusic?.songName ?? detail?.songName ?? ""
-        let artistName = selectedMusic?.artistName ?? detail?.artistName ?? ""
-        let artworkUrl = selectedMusic?.artworkUrl ?? detail?.artworkUrl ?? ""
-        let appleMusicUrl = selectedMusic?.previewMusicUrl ?? detail?.appleMusicUrl ?? ""
+        let songName = selectedMusic?.songName ?? ""
+        let artistName = selectedMusic?.artistName ?? ""
+        let artworkUrl = selectedMusic?.artworkUrl ?? ""
+        let appleMusicUrl = selectedMusic?.previewMusicUrl ?? ""
 
         do {
             try await commentUseCase.createComment(
@@ -123,6 +122,11 @@ final class PostDetailViewModel: ObservableObject {
 
     func clearSelectedMusic() {
         selectedMusic = nil
+    }
+
+    func stopPlayback() {
+        audioPlayer.stop()
+        currentPlayingURL = nil
     }
 
     func makeMusicSearchView() -> AnyView {
@@ -226,6 +230,28 @@ final class PostDetailViewModel: ObservableObject {
             return true
         } catch {
             print("❌ Failed to update post: \(error)")
+            return false
+        }
+    }
+
+    @MainActor
+    func reportComment(comment: Comment, reportReason: String, customText: String?) async -> Bool {
+        guard
+            let commentIdStr = comment.commentId, let commentId = Int64(commentIdStr),
+            let userIdStr = comment.userId, let reportedUserId = Int64(userIdStr)
+        else { return false }
+
+        let reason = reportReason == "OTHER" ? (customText ?? reportReason) : reportReason
+
+        do {
+            try await commentUseCase.reportComment(
+                commentId: commentId,
+                reportedUserId: reportedUserId,
+                reportReason: reason
+            )
+            return true
+        } catch {
+            print("❌ Failed to report comment: \(error)")
             return false
         }
     }

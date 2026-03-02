@@ -82,6 +82,8 @@ private struct PreviewCommentUseCase: CommentUseCase {
     func updateComment(commentId: Int64, content: String) async throws {}
 
     func deleteComment(commentId: Int64) async throws {}
+
+    func reportComment(commentId: Int64, reportedUserId: Int64, reportReason: String) async throws {}
 }
 
 private struct PreviewLikeUseCase: LikeUseCase {

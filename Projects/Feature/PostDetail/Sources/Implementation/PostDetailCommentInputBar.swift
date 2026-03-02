@@ -36,7 +36,7 @@ struct CommentInputBar: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.vertical, 10)
                         .padding(.horizontal, 14)
-                        .background(Color.gray.opacity(0.1))
+                        .background(Color.contentBackground)
                         .cornerRadius(20)
                 }
 
@@ -131,7 +131,7 @@ struct SheetCommentInputBar: View {
                 }
                 .padding(.vertical, 10)
                 .padding(.horizontal, 14)
-                .background(Color.gray.opacity(0.1))
+                .background(Color.contentBackground)
                 .cornerRadius(20)
 
                 Button(action: onSend) {
@@ -188,7 +188,7 @@ private struct MusicAttachmentRow: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color.gray.opacity(0.15))
+        .background(Color.contentBackground)
         .cornerRadius(16)
         .padding(.horizontal, 12)
     }

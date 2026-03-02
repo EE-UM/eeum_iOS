@@ -161,7 +161,7 @@ private struct RandomPostCard: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white)
+        .background(Color.mainBackground)
         .toolbar(.hidden, for: .tabBar)
     }
 }

@@ -84,7 +84,7 @@ struct FeedCardView: View {
             .cornerRadius(12)
         }
         .padding(24)
-        .background(Color.white)
+        .background(Color.mainBackground)
         .cornerRadius(20)
         .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
     }

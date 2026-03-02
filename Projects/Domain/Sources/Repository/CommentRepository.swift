@@ -27,4 +27,7 @@ public protocol CommentRepository {
 
     // Delete
     func deleteComment(commentId: Int64) async throws
+
+    // Report
+    func reportComment(commentId: Int64, reportedUserId: Int64, reportReason: String) async throws
 }

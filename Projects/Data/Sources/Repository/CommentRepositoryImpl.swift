@@ -65,4 +65,16 @@ public final class CommentRepositoryImpl: CommentRepository {
         let res = try await provider.asyncRequest(.deleteComment(commentId: Int(commentId)))
         _ = try res.filterSuccessfulStatusCodes()
     }
+
+    // MARK: - Report
+    public func reportComment(commentId: Int64, reportedUserId: Int64, reportReason: String) async throws {
+        let res = try await provider.asyncRequest(
+            .reportComment(
+                commentId: Int(commentId),
+                reportedUserId: Int(reportedUserId),
+                reportReason: reportReason
+            )
+        )
+        _ = try res.filterSuccessfulStatusCodes()
+    }
 }

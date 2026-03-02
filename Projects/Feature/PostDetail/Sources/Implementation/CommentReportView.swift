@@ -1,196 +1,6 @@
 import SwiftUI
 import Domain
 import DesignSystem
-import UIKit
-
-struct ClearBackgroundView: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        Task { @MainActor in
-            view.superview?.superview?.backgroundColor = .clear
-        }
-        return view
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {}
-}
-
-struct CommentReportOverlay: View {
-    let comment: Comment
-    let isPlaying: Bool
-    let onPlay: () -> Void
-    let onReport: () -> Void
-    let onDismiss: () -> Void
-
-    var body: some View {
-        ZStack {
-            // 어두운 배경
-            Color.black.opacity(0.5)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    onDismiss()
-                }
-
-            VStack(spacing: 0) {
-                Spacer()
-
-                // 댓글 카드
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 12) {
-                        // 음악 아이콘
-                        Image(systemName: "music.note")
-                            .font(.system(size: 14))
-                            .foregroundColor(.black)
-                            .frame(width: 32, height: 32)
-                            .background(Color.gray.opacity(0.1))
-                            .clipShape(Circle())
-
-                        // 곡 정보
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(comment.songName ?? "제목 없음")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.black)
-
-                            Text(comment.artistName ?? "아티스트 미상")
-                                .font(.system(size: 12))
-                                .foregroundColor(.gray)
-                        }
-
-                        Spacer()
-
-                        // 재생 버튼
-                        if comment.appleMusicUrl != nil && !(comment.appleMusicUrl?.isEmpty ?? true) {
-                            Button(action: onPlay) {
-                                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                                    .font(.system(size: 10))
-                                    .foregroundColor(.black)
-                                    .frame(width: 24, height: 24)
-                                    .background(Color.white)
-                                    .clipShape(Circle())
-                                    .overlay(
-                                        Circle()
-                                            .stroke(Color.black, lineWidth: 1)
-                                    )
-                            }
-                        }
-                    }
-
-                    // 댓글 내용
-                    if let content = comment.content, !content.isEmpty {
-                        Text(content)
-                            .font(.system(size: 14))
-                            .foregroundColor(.black)
-                            .lineSpacing(4)
-                    }
-                }
-                .padding(16)
-                .background(Color.white)
-                .cornerRadius(12)
-                .shadow(color: .black.opacity(0.15), radius: 10, x: 0, y: 4)
-                .padding(.horizontal, 24)
-
-                // 신고하기 버튼
-                Button(action: onReport) {
-                    Text("신고하기")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.red)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 12)
-                .padding(.bottom, 50)
-            }
-        }
-        .animation(.easeInOut(duration: 0.2), value: comment.id)
-    }
-}
-
-struct CommentReportSheet: View {
-    let comment: Comment
-    let isPlaying: Bool
-    let onPlay: () -> Void
-    let onReport: () -> Void
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // 댓글 미리보기 카드
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 12) {
-                    // 음악 아이콘
-                    Image(systemName: "music.note")
-                        .font(.system(size: 14))
-                        .foregroundColor(.black)
-                        .frame(width: 32, height: 32)
-                        .background(Color.gray.opacity(0.1))
-                        .clipShape(Circle())
-
-                    // 곡 정보
-                    HStack(spacing: 8) {
-                        Text(comment.songName ?? "제목 없음")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.black)
-
-                        Text(comment.artistName ?? "")
-                            .font(.system(size: 12))
-                            .foregroundColor(.gray)
-                    }
-
-                    Spacer()
-
-                    // 재생 버튼
-                    if comment.appleMusicUrl != nil && !(comment.appleMusicUrl?.isEmpty ?? true) {
-                        Button(action: onPlay) {
-                            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                                .font(.system(size: 10))
-                                .foregroundColor(.black)
-                                .frame(width: 20, height: 20)
-                                .background(Color.white)
-                                .clipShape(Circle())
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.black, lineWidth: 1)
-                                )
-                        }
-                    }
-                }
-
-                // 댓글 내용
-                if let content = comment.content, !content.isEmpty {
-                    Text(content)
-                        .font(.system(size: 14))
-                        .foregroundColor(.black)
-                        .lineSpacing(4)
-                        .lineLimit(4)
-                }
-            }
-            .padding(16)
-            .background(Color.white)
-            .cornerRadius(12)
-            .shadow(color: .black.opacity(0.1), radius: 8, x: 0, y: 2)
-            .padding(.horizontal, 24)
-            .padding(.top, 24)
-
-            Spacer()
-
-            // 신고하기 버튼
-            Button(action: onReport) {
-                Text("신고하기")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.red)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(Color.white)
-                    .cornerRadius(12)
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 40)
-        }
-        .background(Color.black.opacity(0.4))
-    }
-}
 
 struct ReportReasonView: View {
     @Environment(\.dismiss) private var dismiss
@@ -208,7 +18,8 @@ struct ReportReasonView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Image("home")
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.black)
                 }
 
@@ -220,9 +31,9 @@ struct ReportReasonView: View {
 
                 Spacer()
 
-                // 균형을 위한 투명 버튼
-                Image("home")
-                    .foregroundColor(.clear)
+                // 균형을 위한 투명 요소
+                Color.clear
+                    .frame(width: 18, height: 18)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
