@@ -150,15 +150,15 @@ struct CommentModelDTO: Codable {
 
 // MARK: - 댓글한 포스트 DTO (Comments API용)
 struct CommentedPostDTO: Codable {
-    let postId: Int64  // ✅ API에서 숫자로 오므로 Int64
-    let artworkUrl: String
-    let title: String
-    let createdAt: String
-    let updatedAt: String
-    
+    let postId: Int64
+    let artworkUrl: String?
+    let title: String?
+    let createdAt: String?
+    let updatedAt: String?
+
     func toEntity() -> Post {
         return Post(
-            postId: String(postId),  // ✅ Int64를 String으로 변환
+            postId: String(postId),
             writerId: nil,
             title: title,
             content: nil,
@@ -184,6 +184,12 @@ public struct LikeModelDTO: Codable {
             userId: userId,
             isLiked: isLiked)
     }
+}
+
+// MARK: - 좋아요한 포스트 응답 래퍼
+struct LikedPostsResponseDTO: Codable {
+    let likedPostsSize: Int?
+    let getLikedPostsResponses: [LikedPostDTO]?
 }
 
 // MARK: - 좋아요한 포스트 DTO (Likes API용)

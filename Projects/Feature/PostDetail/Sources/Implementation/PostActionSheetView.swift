@@ -7,6 +7,8 @@ struct PostActionSheetView: View {
     let onComplete: () -> Void
     let onDelete: () -> Void
 
+    @State private var showDeleteConfirmation: Bool = false
+
     var body: some View {
         VStack(spacing: 0) {
             Capsule()
@@ -36,10 +38,10 @@ struct PostActionSheetView: View {
                     icon: "trash",
                     title: "삭제",
                     isDestructive: true,
-                    action: onDelete
+                    action: { showDeleteConfirmation = true }
                 )
             }
-            .background(Color.white)
+            .background(Color.mainBackground)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .padding(.horizontal, 20)
 
@@ -54,6 +56,12 @@ struct PostActionSheetView: View {
                     .ignoresSafeArea()
                 ProgressView()
             }
+        }
+        .alert("사연을 삭제하시겠습니까?", isPresented: $showDeleteConfirmation) {
+            Button("취소", role: .cancel) {}
+            Button("삭제", role: .destructive) { onDelete() }
+        } message: {
+            Text("삭제된 사연은 복구할 수 없습니다.")
         }
     }
 

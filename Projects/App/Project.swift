@@ -6,25 +6,29 @@ let project = Project(
     packages: [],
     settings: .settings(
         base: [
+            "DEVELOPMENT_TEAM": "AU24ZRJ649",
             "CODE_SIGN_STYLE": "Automatic",
-            "DEVELOPMENT_TEAM": "",
         ],
-        defaultSettings: .recommended
+        defaultSettings: .recommended(excluding: ["CODE_SIGN_IDENTITY"])
     ),
     targets: [
         .target(
             name: "App",
             destinations: .iOS,
             product: .app,
-            bundleId: "com.example.eeum",
-            deploymentTargets: .iOS("18.0"),
+            bundleId: "com.eeum.app",
+            deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
                 with: [
+                    "CFBundleName": "이음",
+                    "CFBundleDisplayName": "이음",
                     "UILaunchScreen": [
                         "UIColorName": "",
                         "UIImageName": "",
                     ],
                     "UIUserInterfaceStyle": "Light",
+                    "CFBundleShortVersionString": "1.0.0",
+                    "CFBundleVersion": "2",
                 ]
             ),
             sources: ["Sources/**"],
@@ -42,19 +46,40 @@ let project = Project(
                 .project(target: "SettingInterface", path: "../Feature/Setting"),
                 .project(target: "AuthInterface", path: "../Feature/Auth"),
                 .external(name: "Moya"),
-            ]
+            ],
+            settings: .settings(
+                base: [
+                    "PRODUCT_NAME": "eeum",
+                ],
+                configurations: [
+                    .debug(name: "Debug", settings: [:]),
+                    .release(name: "Release", settings: [:]),
+                ],
+                defaultSettings: .recommended(excluding: ["CODE_SIGN_IDENTITY"])
+            )
         ),
         .target(
             name: "AppTests",
             destinations: .iOS,
             product: .unitTests,
-            bundleId: "com.example.eeum.test",
-            deploymentTargets: .iOS("18.0"),
+            bundleId: "com.app.eeum.test",
+            deploymentTargets: .iOS("17.0"),
             infoPlist: .default,
             sources: ["Tests/**"],
             dependencies: [
                 .target(name: "App"),
             ]
         ),
+    ],
+    schemes: [
+        .scheme(
+            name: "이음",
+            shared: true,
+            buildAction: .buildAction(targets: ["App"]),
+            runAction: .runAction(configuration: .debug),
+            archiveAction: .archiveAction(configuration: .release),
+            profileAction: .profileAction(configuration: .release),
+            analyzeAction: .analyzeAction(configuration: .debug)
+        )
     ]
 )

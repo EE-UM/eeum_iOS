@@ -12,7 +12,7 @@ import Foundation
 
 public enum PostAPI {
     case createPost(title: String, content: String, albumName: String, songName: String, artistName: String, artworkUrl: String, appleMusicUrl: String, completionType: String, commentCountLimit: Int)
-    case updatePost(postId: Int64, title: String, content: String)
+    case updatePost(postId: Int64, title: String, content: String, albumName: String, songName: String, artistName: String, artworkUrl: String, appleMusicUrl: String)
     case updatePostState(postId: Int64)
     case getPostDetail(postId: Int64)
     case deletePost(postId: Int64)
@@ -34,7 +34,7 @@ extension PostAPI: TargetType, AccessTokenAuthorizable {
     public var path: String {
         switch self {
         case .createPost:                             return "/posts"
-        case .updatePost(let id, _, _):               return "/posts/\(id)"
+        case .updatePost:                             return "/posts"
         case .updatePostState(let id):                return "/posts/\(id)/complete"
         case .getPostDetail(let id):                  return "/posts/\(id)"
         case .deletePost(let id):                     return "/posts/\(id)"
@@ -51,7 +51,9 @@ extension PostAPI: TargetType, AccessTokenAuthorizable {
         switch self {
         case .getRandomPosts, .getMyPosts, .getLikedPosts, .getIngPosts, .getDonePosts, .getCommentedPosts, .getPostDetail:
             return .get
-        case .updatePostState, .updatePost:
+        case .updatePostState:
+            return .patch
+        case .updatePost:
             return .patch
         case .createPost:
             return .post
@@ -94,8 +96,17 @@ extension PostAPI: TargetType, AccessTokenAuthorizable {
             ]
             return .requestParameters(parameters: body, encoding: JSONEncoding.default)      // ← JSON body
 
-        case let .updatePost(_, title, content):
-            let body = ["title": title, "content": content]
+        case let .updatePost(postId, title, content, albumName, songName, artistName, artworkUrl, appleMusicUrl):
+            let body: [String: Any] = [
+                "postId": postId,
+                "title": title,
+                "content": content,
+                "albumName": albumName,
+                "songName": songName,
+                "artistName": artistName,
+                "artworkUrl": artworkUrl,
+                "appleMusicUrl": appleMusicUrl
+            ]
             return .requestParameters(parameters: body, encoding: JSONEncoding.default)      // ← JSON body
         }
     }

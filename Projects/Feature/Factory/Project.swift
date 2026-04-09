@@ -3,14 +3,14 @@ import ProjectDescription
 let project = Project(
     name: "FeatureFactory",
     organizationName: "eeum",
-    settings: .settings(defaultSettings: .recommended),
+    settings: .settings(defaultSettings: .recommended(excluding: ["CODE_SIGN_IDENTITY"])),
     targets: [
         .target(
             name: "FeatureFactory",
             destinations: .iOS,
             product: .staticFramework,
             bundleId: "io.tuist.eeum.feature.factory",
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("17.0"),
             sources: ["Sources/**"],
             resources: [],
             dependencies: [

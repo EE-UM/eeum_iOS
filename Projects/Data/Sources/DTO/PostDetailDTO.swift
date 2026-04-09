@@ -10,28 +10,28 @@ import Domain
 
 struct PostDetailDTO: Codable {
     let postId: Int64
-    let title: String
-    let content: String
-    let songName: String
-    let artistName: String
-    let artworkUrl: String
-    let appleMusicUrl: String
-    let createdAt: String
-    let isLiked: Bool
-    let comments: [CommentModelDTO]
+    let title: String?
+    let content: String?
+    let songName: String?
+    let artistName: String?
+    let artworkUrl: String?
+    let appleMusicUrl: String?
+    let createdAt: String?
+    let isLiked: Bool?
+    let comments: [CommentModelDTO]?
 
     func toEntity() -> PostDetail {
-        let toEntitiedComments = comments.map { $0.toEntity() }
+        let toEntitiedComments = (comments ?? []).map { $0.toEntity() }
         return PostDetail(
             postId: String(postId),
-            title: title,
-            content: content,
-            songName: songName,
-            artistName: artistName,
-            artworkUrl: artworkUrl,
-            appleMusicUrl: appleMusicUrl,
-            createdAt: createdAt,
-            isLiked: isLiked,
+            title: title ?? "",
+            content: content ?? "",
+            songName: songName ?? "",
+            artistName: artistName ?? "",
+            artworkUrl: artworkUrl ?? "",
+            appleMusicUrl: appleMusicUrl ?? "",
+            createdAt: createdAt ?? "",
+            isLiked: isLiked ?? false,
             comments: toEntitiedComments)
     }
 }

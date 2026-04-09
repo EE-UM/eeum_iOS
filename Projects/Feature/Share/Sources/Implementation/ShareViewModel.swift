@@ -112,6 +112,14 @@ public final class ShareViewModel: ObservableObject {
                     self.isSharing = false
                     self.didShareSuccessfully = true
                     self.showCompleteView = true
+                    self.titleText = ""
+                    self.descriptionText = ""
+                    self.storyText = ""
+                    self.selectedMusicTitle = nil
+                    self.selectedMusicArtist = nil
+                    self.selectedMusicAlbumName = nil
+                    self.selectedMusicArtworkUrl = nil
+                    self.selectedMusicPreviewUrl = nil
                 }
             } catch {
                 await MainActor.run {

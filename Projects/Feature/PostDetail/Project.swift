@@ -3,14 +3,14 @@ import ProjectDescription
 let project = Project(
     name: "PostDetail",
     organizationName: "eeum",
-    settings: .settings(defaultSettings: .recommended),
+    settings: .settings(defaultSettings: .recommended(excluding: ["CODE_SIGN_IDENTITY"])),
     targets: [
         .target(
             name: "PostDetailInterface",
             destinations: .iOS,
             product: .staticFramework,
             bundleId: "io.tuist.eeum.postdetail.interface",
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("17.0"),
             sources: ["Sources/Interface/**"],
             resources: [],
             dependencies: [
@@ -22,7 +22,7 @@ let project = Project(
             destinations: .iOS,
             product: .staticFramework,
             bundleId: "io.tuist.eeum.postdetail",
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("17.0"),
             sources: ["Sources/Implementation/**"],
             resources: [],
             dependencies: [

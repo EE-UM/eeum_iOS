@@ -3,14 +3,14 @@ import ProjectDescription
 let project = Project(
     name: "Auth",
     organizationName: "eeum",
-    settings: .settings(defaultSettings: .recommended),
+    settings: .settings(defaultSettings: .recommended(excluding: ["CODE_SIGN_IDENTITY"])),
     targets: [
         .target(
             name: "AuthInterface",
             destinations: .iOS,
             product: .staticFramework,
             bundleId: "io.tuist.eeum.auth.interface",
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("17.0"),
             sources: ["Sources/Interface/**"],
             resources: []
         ),
@@ -19,7 +19,7 @@ let project = Project(
             destinations: .iOS,
             product: .staticFramework,
             bundleId: "io.tuist.eeum.auth",
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("17.0"),
             sources: ["Sources/Implementation/**"],
             resources: [],
             dependencies: [
@@ -33,7 +33,7 @@ let project = Project(
             destinations: .iOS,
             product: .app,
             bundleId: "io.tuist.eeum.auth.demoapp",
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
                 with: [
                     "UILaunchScreen": [
@@ -46,7 +46,7 @@ let project = Project(
             resources: [],
             dependencies: [
                 .target(name: "Auth"),
-            ]
+            ],
         ),
     ]
 )

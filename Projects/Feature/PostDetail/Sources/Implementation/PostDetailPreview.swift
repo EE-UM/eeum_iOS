@@ -51,7 +51,7 @@ private final class PreviewPostRepository: PostRepository {
 
     func createPost(title: String, content: String, albumName: String, songName: String, artistName: String, artworkUrl: String, appleMusicUrl: String, completionType: String, commentCountLimit: Int) async throws {}
 
-    func updatePost(postId: Int64, title: String, content: String) async throws {}
+    func updatePost(postId: Int64, title: String, content: String, albumName: String, songName: String, artistName: String, artworkUrl: String, appleMusicUrl: String) async throws {}
 
     func updatePostState(postId: Int64) async throws {}
 

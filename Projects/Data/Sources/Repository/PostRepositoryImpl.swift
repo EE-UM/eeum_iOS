@@ -31,8 +31,8 @@ public final class PostRepositoryImpl: PostRepository {
         _ = try res.filterSuccessfulStatusCodes()
     }
 
-    public func updatePost(postId: Int64, title: String, content: String) async throws {
-        let res = try await provider.asyncRequest(.updatePost(postId: postId, title: title, content: content))
+    public func updatePost(postId: Int64, title: String, content: String, albumName: String, songName: String, artistName: String, artworkUrl: String, appleMusicUrl: String) async throws {
+        let res = try await provider.asyncRequest(.updatePost(postId: postId, title: title, content: content, albumName: albumName, songName: songName, artistName: artistName, artworkUrl: artworkUrl, appleMusicUrl: appleMusicUrl))
         _ = try res.filterSuccessfulStatusCodes()
     }
 
@@ -76,8 +76,8 @@ public final class PostRepositoryImpl: PostRepository {
     public func getLikedPosts() async throws -> [Post] {
         let res = try await provider.asyncRequest(.getLikedPosts(pageSize: 20, lastPostId: nil))  // ✅ 기본값 사용
         let ok = try res.filterSuccessfulStatusCodes()
-        let apiResponse = try decoder.decode(ApiResponse<[LikedPostDTO]>.self, from: ok.data)  // ✅ LikedPostDTO 사용
-        let dtos = apiResponse.data ?? []
+        let apiResponse = try decoder.decode(ApiResponse<LikedPostsResponseDTO>.self, from: ok.data)
+        let dtos = apiResponse.data?.getLikedPostsResponses ?? []
         return dtos.map { $0.toEntity() }
     }
 

@@ -13,6 +13,7 @@ final class PostDetailViewModel: ObservableObject {
     @Published var isManagingPost: Bool = false
     @Published var didDeletePost: Bool = false
     @Published var currentPlayingURL: String?
+    @Published var commentErrorMessage: String?
 
     private let postRepository: PostRepository
     private let commentUseCase: CommentUseCase
@@ -58,7 +59,9 @@ final class PostDetailViewModel: ObservableObject {
 
         isLoading = true
         do {
+            print("📡 Loading post detail for postId: \(postId)")
             let detail = try await postRepository.getPostDetail(postId: Int64(postId) ?? 0)
+            print("✅ Post detail loaded: title=\(detail.title), content=\(detail.content.prefix(50))")
             postDetail = detail
             isMyPost = await checkIfMyPost(postId: detail.postId)
             isLoading = false
@@ -93,7 +96,9 @@ final class PostDetailViewModel: ObservableObject {
                 self.selectedMusic = nil
             }
         } catch {
+            commentErrorMessage = "댓글 등록에 실패했습니다. 다시 시도해주세요."
             print("❌ Failed to create comment: \(error)")
+            return
         }
     }
 
@@ -219,13 +224,13 @@ final class PostDetailViewModel: ObservableObject {
     }
 
     @MainActor
-    func updatePost(title: String, content: String) async -> Bool {
+    func updatePost(title: String, content: String, albumName: String, songName: String, artistName: String, artworkUrl: String, appleMusicUrl: String) async -> Bool {
         guard !isManagingPost, let postIdInt = Int64(postId) else { return false }
         isManagingPost = true
         defer { isManagingPost = false }
 
         do {
-            try await postRepository.updatePost(postId: postIdInt, title: title, content: content)
+            try await postRepository.updatePost(postId: postIdInt, title: title, content: content, albumName: albumName, songName: songName, artistName: artistName, artworkUrl: artworkUrl, appleMusicUrl: appleMusicUrl)
             await loadPostDetailAsync()
             return true
         } catch {

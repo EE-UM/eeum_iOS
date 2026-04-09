@@ -3,14 +3,14 @@ import ProjectDescription
 let project = Project(
     name: "Search",
     organizationName: "eeum",
-    settings: .settings(defaultSettings: .recommended),
+    settings: .settings(defaultSettings: .recommended(excluding: ["CODE_SIGN_IDENTITY"])),
     targets: [
         .target(
             name: "Search",
             destinations: .iOS,
             product: .staticFramework,
             bundleId: "io.tuist.eeum.search",
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("17.0"),
             sources: [
                 "Sources/Interface/**",
                 "Sources/Implementation/**"
@@ -26,7 +26,7 @@ let project = Project(
             destinations: .iOS,
             product: .app,
             bundleId: "io.tuist.eeum.search.demoapp",
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
                 with: [
                     "UILaunchScreen": [
@@ -39,7 +39,7 @@ let project = Project(
             resources: [],
             dependencies: [
                 .target(name: "Search"),
-            ]
+            ],
         ),
     ]
 )

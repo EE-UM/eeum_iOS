@@ -114,6 +114,9 @@ struct ReportReasonView: View {
             Spacer()
         }
         .background(Color.mainBackground)
+        .onTapGesture {
+            isCustomReasonFocused = false
+        }
     }
 
     private func submitReport(reason: ReportReason) {

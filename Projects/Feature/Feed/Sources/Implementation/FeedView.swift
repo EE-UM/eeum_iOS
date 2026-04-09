@@ -122,7 +122,7 @@ private struct InboxButtonStyle: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 26.0, *) {
             content
-                .glassEffect(.regular.interactive())
+                .glassEffect(.regular.interactive().tint(Color(red: 234/255, green: 232/255, blue: 224/255).opacity(0.6)))
                 .clipShape(Capsule())
         } else {
             content

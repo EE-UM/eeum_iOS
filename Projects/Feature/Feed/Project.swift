@@ -3,14 +3,14 @@ import ProjectDescription
 let project = Project(
     name: "Feed",
     organizationName: "eeum",
-    settings: .settings(defaultSettings: .recommended),
+    settings: .settings(defaultSettings: .recommended(excluding: ["CODE_SIGN_IDENTITY"])),
     targets: [
         .target(
             name: "FeedInterface",
             destinations: .iOS,
             product: .staticFramework,
             bundleId: "io.tuist.eeum.feed.interface",
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("17.0"),
             sources: ["Sources/Interface/**"],
             resources: [],
             dependencies: [
@@ -22,7 +22,7 @@ let project = Project(
             destinations: .iOS,
             product: .staticFramework,
             bundleId: "io.tuist.eeum.feed",
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("17.0"),
             sources: ["Sources/Implementation/**"],
             resources: [],
             dependencies: [
@@ -38,7 +38,7 @@ let project = Project(
             destinations: .iOS,
             product: .app,
             bundleId: "io.tuist.eeum.feed.demoapp",
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
                 with: [
                     "UILaunchScreen": [
@@ -51,7 +51,7 @@ let project = Project(
             resources: [],
             dependencies: [
                 .target(name: "Feed"),
-            ]
+            ],
         ),
     ]
 )

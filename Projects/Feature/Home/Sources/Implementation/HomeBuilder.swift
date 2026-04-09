@@ -26,6 +26,7 @@ private final class HomeViewModel: ObservableObject {
     @Published var randomPost: Post?
     @Published var showRandomPost: Bool = false
     @Published var isLoading: Bool = false
+    @Published var showNoPostAlert: Bool = false
 
     private let postRepository: PostRepository
 
@@ -50,6 +51,8 @@ private final class HomeViewModel: ObservableObject {
                     randomPost = post
                     showRandomPost = true
                     print("✅ Showing random post: \(post.title ?? "No title")")
+                } else {
+                    showNoPostAlert = true
                 }
                 isLoading = false
             } catch {
@@ -76,6 +79,7 @@ private struct HomeView: View {
                         viewModel.showRandomPost = false
                     }
                 )
+                .id(post.postId)
                 .transition(.move(edge: .trailing))
             } else {
                 VStack {
@@ -105,6 +109,16 @@ private struct HomeView: View {
             print("📳 Shake detected!")
             viewModel.loadRandomPost()
         }
+        .alert("알림", isPresented: $viewModel.showNoPostAlert) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text("현재 받을 수 있는 게시글이 없습니다.")
+        }
+        #if targetEnvironment(simulator)
+        .onTapGesture {
+            viewModel.loadRandomPost()
+        }
+        #endif
     }
 }
 
@@ -114,32 +128,42 @@ private struct RandomPostCard: View {
     let postDetailBuilder: PostDetailBuildable
     let onDismiss: () -> Void
 
+    @State private var cardAppeared: Bool = false
+    @State private var shakeAngle: Double = 0
+
     var body: some View {
         VStack(spacing: 0) {
-            // Shake Image
-            Image("logo")
-                .padding(.top, 20)
-            Image("shake")
-                .resizable()
-                .scaledToFit()
-                .frame(height: 150)
-                .padding(.top, 20)
+            // Description
+            Text("Shake to receive someone's letter\nanswer with music")
+                .font(.helvetica(size: 18, weight: .regular))
+                .multilineTextAlignment(.center)
+                .foregroundColor(.gray)
+                .padding(.top, 12)
 
-            Spacer()
-
-            // Content
-            VStack(alignment: .leading, spacing: 20) {
+            // Post Card
+            VStack(alignment: .leading, spacing: 12) {
                 Text(post.title ?? "제목 없음")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.black)
 
                 Text(post.content ?? "")
-                    .font(.system(size: 15))
+                    .font(.system(size: 14))
                     .foregroundColor(.gray)
-                    .lineLimit(9)
+                    .lineSpacing(4)
+                    .lineLimit(8)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 32)
+            .padding(24)
+            .frame(minHeight: 380, alignment: .top)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color(red: 234/255, green: 232/255, blue: 224/255).opacity(0.5))
+            )
+            .padding(.horizontal, 42)
+            .padding(.top, 32)
+            .rotationEffect(.degrees(shakeAngle))
+            .offset(y: cardAppeared ? 0 : 300)
+            .opacity(cardAppeared ? 1 : 0)
 
             Spacer()
 
@@ -158,11 +182,38 @@ private struct RandomPostCard: View {
                 }
                 .padding(.horizontal, 32)
                 .padding(.bottom, 98)
+                .opacity(cardAppeared ? 1 : 0)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.mainBackground)
         .toolbar(.hidden, for: .tabBar)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Image("logo")
+            }
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.6)) {
+                cardAppeared = true
+            }
+            // Gentle single shake: left → right → settle
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    shakeAngle = -4
+                }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    shakeAngle = 3
+                }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    shakeAngle = 0
+                }
+            }
+        }
     }
 }
 
@@ -219,7 +270,7 @@ private final class PreviewMockLoginUseCase: LoginUseCase {
 
 private final class PreviewPostRepository: PostRepository {
     func createPost(title: String, content: String, albumName: String, songName: String, artistName: String, artworkUrl: String, appleMusicUrl: String, completionType: String, commentCountLimit: Int) async throws {}
-    func updatePost(postId: Int64, title: String, content: String) async throws {}
+    func updatePost(postId: Int64, title: String, content: String, albumName: String, songName: String, artistName: String, artworkUrl: String, appleMusicUrl: String) async throws {}
     func updatePostState(postId: Int64) async throws {}
     func getPostDetail(postId: Int64) async throws -> PostDetail {
         PostDetail(postId: "1", title: "Test", content: "Test", songName: "Song", artistName: "Artist", artworkUrl: "", appleMusicUrl: "", createdAt: "", isLiked: false, comments: [])

@@ -47,7 +47,7 @@ class MockPostRepository: PostRepository {
         // Mock implementation
     }
 
-    func updatePost(postId: Int64, title: String, content: String) async throws {
+    func updatePost(postId: Int64, title: String, content: String, albumName: String, songName: String, artistName: String, artworkUrl: String, appleMusicUrl: String) async throws {
         // Mock implementation
     }
 

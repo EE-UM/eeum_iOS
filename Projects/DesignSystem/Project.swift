@@ -3,14 +3,14 @@ import ProjectDescription
 let project = Project(
     name: "DesignSystem",
     organizationName: "eeum",
-    settings: .settings(defaultSettings: .recommended),
+    settings: .settings(defaultSettings: .recommended(excluding: ["CODE_SIGN_IDENTITY"])),
     targets: [
         .target(
             name: "DesignSystem",
             destinations: .iOS,
             product: .staticFramework,
             bundleId: "io.tuist.eeum.designsystem",
-            deploymentTargets: .iOS("18.0"),
+            deploymentTargets: .iOS("17.0"),
             infoPlist: .extendingDefault(
                 with: [
                     "UIAppFonts": .array([
@@ -29,7 +29,8 @@ let project = Project(
                 ]
             ),
             sources: ["Sources/**"],
-            resources: ["Resources/**"]
+            resources: ["Resources/**"],
+            settings: .settings(defaultSettings: .recommended(excluding: ["CODE_SIGN_IDENTITY"]))
         ),
     ]
 )

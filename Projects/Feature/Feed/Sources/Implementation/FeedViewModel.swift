@@ -255,10 +255,9 @@ public final class FeedViewModel: ObservableObject {
             guard let self else { return }
             do {
                 let posts = try await postRepository.getLikedPosts()
-                let enrichedPosts = await self.enrichLikedPosts(with: posts)
 
                 await MainActor.run {
-                    self.likedPosts = enrichedPosts
+                    self.likedPosts = posts
                     self.isLoadingLikedPosts = false
                 }
             } catch {

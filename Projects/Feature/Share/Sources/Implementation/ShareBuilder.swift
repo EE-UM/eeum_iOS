@@ -28,6 +28,7 @@ public struct ShareBuilder: ShareBuildable {
 public struct ShareView: View {
     @StateObject private var viewModel: ShareViewModel
     @Environment(\.dismiss) private var dismiss
+    @FocusState private var isFocused: Bool
 
     public init(viewModel: ShareViewModel) {
         _viewModel = StateObject(wrappedValue: viewModel)
@@ -37,10 +38,14 @@ public struct ShareView: View {
         ZStack {
             Color.mainBackground
                 .ignoresSafeArea()
+                .onTapGesture {
+                    isFocused = false
+                }
 
             VStack(spacing: 0) {
                 // Voice Recording Button / Album Art
                 HStack {
+                    Spacer()
                     NavigationLink {
                         viewModel.makeMusicSearchView()
                     } label: {
@@ -81,20 +86,20 @@ public struct ShareView: View {
                                 .offset(x: 5, y: -5)
                         }
                     }
-                    Spacer()
                 }
-                .padding(.horizontal)
-                .padding(.top, 20)
+                .padding(.horizontal, 24)
+                .padding(.top, 4)
 
-                // Title Input
+                // Title + Story Card
                 VStack(alignment: .leading, spacing: 12) {
                     TextField("사연의 제목을 작성해 주세요", text: $viewModel.titleText)
                         .font(.title3)
                         .fontWeight(.semibold)
+                        .focused($isFocused)
 
                     ZStack(alignment: .topLeading) {
                         if viewModel.storyText.isEmpty {
-                            Text(" 00자에서 00자 이내로 자유롭게 공유하고싶은 사연을 작성해주세요")
+                            Text(" 200자 이내로 자유롭게 공유하고싶은 사연을 작성해주세요")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                                 .padding(.top, 22)
@@ -103,11 +108,17 @@ public struct ShareView: View {
                         TextEditor(text: $viewModel.storyText)
                             .padding(.top, 14)
                             .scrollContentBackground(.hidden)
+                            .focused($isFocused)
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .padding(.top, 20)
+                .frame(maxWidth: .infinity, minHeight: 250, alignment: .leading)
+                .padding(20)
+                .background(
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color(red: 234/255, green: 232/255, blue: 224/255).opacity(0.5))
+                )
+                .padding(.horizontal, 24)
+                .padding(.top, 32)
 
                 Spacer(minLength: 0)
 

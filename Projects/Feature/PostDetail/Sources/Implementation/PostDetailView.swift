@@ -10,8 +10,8 @@ struct PostDetailView: View {
     @State private var isNavigatingToSearch: Bool = false
     @State private var showPostActionSheet: Bool = false
     @State private var isShowingEditSheet: Bool = false
-    @State private var showCommentSheet: Bool = false
-    @State private var expandedCommentId: String?
+    @State private var commentText: String = ""
+    @FocusState private var isCommentFocused: Bool
     @State private var commentToReport: Comment?
     @State private var showReportReasonView: Bool = false
 
@@ -28,63 +28,75 @@ struct PostDetailView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                ScrollView {
-                    VStack(spacing: 0) {
-                        if let detail = viewModel.postDetail {
-                            PostDetailContent(
-                                detail: detail,
-                                isPlaying: viewModel.isPostPlaying,
-                                onTogglePlay: {
-                                    viewModel.togglePlay()
-                                },
-                                isShowingCommentsList: showCommentsList,
-                                onToggleCommentsList: {
-                                    showCommentsList.toggle()
-                                },
-                                onPlayComment: { url in
-                                    viewModel.playComment(url: url)
-                                },
-                                isCommentPlaying: { url in
-                                    viewModel.isPlaying(url: url)
-                                },
-                                expandedCommentId: $expandedCommentId,
-                                onReportComment: { comment in
-                                    commentToReport = comment
-                                    expandedCommentId = nil
-                                    showReportReasonView = true
-                                }
-                            )
-                            .padding(.bottom, 40)
-                        } else {
-                            ProgressView()
-                                .frame(maxWidth: .infinity, maxHeight: 400)
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            if let detail = viewModel.postDetail {
+                                PostDetailContent(
+                                    detail: detail,
+                                    isPlaying: viewModel.isPostPlaying,
+                                    onTogglePlay: {
+                                        viewModel.togglePlay()
+                                    },
+                                    isShowingCommentsList: showCommentsList,
+                                    onToggleCommentsList: {
+                                        showCommentsList.toggle()
+                                    },
+                                    onPlayComment: { url in
+                                        viewModel.playComment(url: url)
+                                    },
+                                    isCommentPlaying: { url in
+                                        viewModel.isPlaying(url: url)
+                                    },
+                                    onReportComment: { comment in
+                                        commentToReport = comment
+                                        showReportReasonView = true
+                                    }
+                                )
+                                .padding(.bottom, 40)
+                            } else {
+                                ProgressView()
+                                    .frame(maxWidth: .infinity, maxHeight: 400)
+                            }
                         }
                     }
                 }
+                .scrollDismissesKeyboard(.interactively)
                 .onTapGesture {
-                    if expandedCommentId != nil {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            expandedCommentId = nil
-                        }
-                    }
+                    isCommentFocused = false
                 }
 
                 if !viewModel.isMyPost {
-                    CommentInputBar(
+                    SheetCommentInputBar(
+                        commentText: $commentText,
+                        isCommentFocused: _isCommentFocused,
                         selectedMusicTitle: viewModel.selectedMusicDisplayText,
                         selectedMusicArtworkURL: viewModel.selectedMusic?.artworkUrl,
+                        selectedMusicSongName: viewModel.selectedMusic?.songName,
+                        selectedMusicArtistName: viewModel.selectedMusic?.artistName,
                         onTapAddMusic: {
-                            openMusicSearch()
+                            isCommentFocused = false
+                            Task {
+                                try? await Task.sleep(nanoseconds: 300_000_000)
+                                openMusicSearch()
+                            }
                         },
-                        onTapInput: {
-                            showCommentSheet = true
+                        onSend: {
+                            let trimmed = commentText.trimmingCharacters(in: .whitespacesAndNewlines)
+                            guard !trimmed.isEmpty else { return }
+                            Task {
+                                await viewModel.createComment(content: trimmed)
+                                await MainActor.run {
+                                    if viewModel.commentErrorMessage == nil {
+                                        commentText = ""
+                                    }
+                                }
+                            }
                         },
                         onRemoveMusic: {
                             viewModel.clearSelectedMusic()
                         }
                     )
-                    .opacity(expandedCommentId != nil ? 0.3 : 1.0)
-                    .allowsHitTesting(expandedCommentId == nil)
                 }
             }
 
@@ -108,25 +120,27 @@ struct PostDetailView: View {
             }
 
             ToolbarItem(placement: .navigationBarTrailing) {
-                if viewModel.isMyPost {
-                    Button {
-                        showPostActionSheet = true
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .rotationEffect(.degrees(90))
-                            .font(.system(size: 20, weight: .medium))
-                            .foregroundColor(.black)
+                if viewModel.postDetail != nil {
+                    if viewModel.isMyPost {
+                        Button {
+                            showPostActionSheet = true
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .rotationEffect(.degrees(90))
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.black)
+                        }
+                        .disabled(viewModel.isManagingPost)
+                    } else {
+                        Button {
+                            viewModel.toggleLike()
+                        } label: {
+                            Image(systemName: viewModel.postDetail?.isLiked == true ? "heart.fill" : "heart")
+                                .font(.system(size: 20))
+                                .foregroundColor(viewModel.postDetail?.isLiked == true ? .red : .black)
+                        }
+                        .disabled(viewModel.isUpdatingLike)
                     }
-                    .disabled(viewModel.isManagingPost)
-                } else {
-                    Button {
-                        viewModel.toggleLike()
-                    } label: {
-                        Image(viewModel.postDetail?.isLiked == true ? "heart.fill" : "heart")
-                            .font(.system(size: 20))
-                            .foregroundColor(.black)
-                    }
-                    .disabled(viewModel.isUpdatingLike)
                 }
             }
         }
@@ -162,37 +176,25 @@ struct PostDetailView: View {
             .presentationDetents([.fraction(0.3)])
             .presentationDragIndicator(.hidden)
         }
-        .sheet(isPresented: $isShowingEditSheet) {
+        .navigationDestination(isPresented: $isShowingEditSheet) {
             if let detail = viewModel.postDetail {
                 PostEditSheet(viewModel: viewModel, detail: detail)
             } else {
                 EmptyView()
             }
         }
-        .sheet(isPresented: $showCommentSheet) {
-            CommentSheet(
-                viewModel: viewModel,
-                onTapAddMusic: {
-                    showCommentSheet = false
-                    Task {
-                        try? await Task.sleep(nanoseconds: 300_000_000)
-                        openMusicSearch()
-                    }
-                },
-                onReportComment: { comment in
-                    showCommentSheet = false
-                    Task {
-                        try? await Task.sleep(nanoseconds: 300_000_000)
-                        commentToReport = comment
-                        showReportReasonView = true
-                    }
-                }
-            )
-            .presentationDetents([.large])
-            .presentationDragIndicator(.visible)
-        }
         .background(navigationLink)
         .enableSwipeBack()
+        .alert("오류", isPresented: Binding<Bool>(
+            get: { viewModel.commentErrorMessage != nil },
+            set: { if !$0 { viewModel.commentErrorMessage = nil } }
+        )) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            if let message = viewModel.commentErrorMessage {
+                Text(message)
+            }
+        }
         .fullScreenCover(isPresented: $showReportReasonView) {
             if let comment = commentToReport {
                 ReportReasonView(comment: comment) { reason, customText in
@@ -222,7 +224,6 @@ struct PostDetailView: View {
         let onToggleCommentsList: () -> Void
         let onPlayComment: (String) -> Void
         let isCommentPlaying: (String) -> Bool
-        @Binding var expandedCommentId: String?
         let onReportComment: (Comment) -> Void
 
         var body: some View {
@@ -295,9 +296,6 @@ struct PostDetailView: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 20)
                 }
-                .opacity(expandedCommentId != nil ? 0.3 : 1.0)
-                .allowsHitTesting(expandedCommentId == nil)
-
                 if let comments = detail.comments, !comments.isEmpty {
                     VStack(alignment: .leading, spacing: 16) {
                         if isShowingCommentsList {
@@ -306,26 +304,15 @@ struct PostDetailView: View {
                                     CommentListItem(
                                         comment: comment,
                                         isPlaying: isCommentPlaying(comment.appleMusicUrl ?? ""),
-                                        isActionExpanded: expandedCommentId == comment.commentId,
                                         onPlay: {
                                             if let url = comment.appleMusicUrl {
                                                 onPlayComment(url)
-                                            }
-                                        },
-                                        onLongPress: {
-                                            withAnimation(.easeInOut(duration: 0.2)) {
-                                                if expandedCommentId == comment.commentId {
-                                                    expandedCommentId = nil
-                                                } else {
-                                                    expandedCommentId = comment.commentId
-                                                }
                                             }
                                         },
                                         onReport: {
                                             onReportComment(comment)
                                         }
                                     )
-                                    .opacity(expandedCommentId != nil && expandedCommentId != comment.commentId ? 0.3 : 1.0)
                                 }
                             }
                         } else {
@@ -334,26 +321,15 @@ struct PostDetailView: View {
                                     CommentCard(
                                         comment: comment,
                                         isPlaying: isCommentPlaying(comment.appleMusicUrl ?? ""),
-                                        isActionExpanded: expandedCommentId == comment.commentId,
                                         onPlay: {
                                             if let url = comment.appleMusicUrl {
                                                 onPlayComment(url)
-                                            }
-                                        },
-                                        onLongPress: {
-                                            withAnimation(.easeInOut(duration: 0.2)) {
-                                                if expandedCommentId == comment.commentId {
-                                                    expandedCommentId = nil
-                                                } else {
-                                                    expandedCommentId = comment.commentId
-                                                }
                                             }
                                         },
                                         onReport: {
                                             onReportComment(comment)
                                         }
                                     )
-                                    .opacity(expandedCommentId != nil && expandedCommentId != comment.commentId ? 0.3 : 1.0)
                                 }
                             }
                         }
