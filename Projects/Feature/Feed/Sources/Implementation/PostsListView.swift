@@ -62,9 +62,7 @@ public struct PostsListView: View {
             }
         }
         .onAppear {
-            if viewModel.myPosts.isEmpty {
-                viewModel.loadMyPosts()
-            }
+            viewModel.loadMyPosts()
         }
     }
 }

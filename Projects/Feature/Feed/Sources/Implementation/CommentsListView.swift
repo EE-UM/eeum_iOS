@@ -49,9 +49,7 @@ public struct CommentsListView: View {
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
-            if viewModel.commentedPosts.isEmpty {
-                viewModel.loadCommentedPosts()
-            }
+            viewModel.loadCommentedPosts()
         }
     }
 }

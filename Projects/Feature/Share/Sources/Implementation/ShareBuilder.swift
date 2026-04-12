@@ -42,125 +42,127 @@ public struct ShareView: View {
                     isFocused = false
                 }
 
-            VStack(spacing: 0) {
-                // Voice Recording Button / Album Art
-                HStack {
-                    Spacer()
-                    NavigationLink {
-                        viewModel.makeMusicSearchView()
-                    } label: {
-                        ZStack(alignment: .topTrailing) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.contentBackground)
-                                    .frame(width: 64, height: 64)
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Voice Recording Button / Album Art
+                    HStack {
+                        Spacer()
+                        NavigationLink {
+                            viewModel.makeMusicSearchView()
+                        } label: {
+                            ZStack(alignment: .topTrailing) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.contentBackground)
+                                        .frame(width: 64, height: 64)
 
-                                if
-                                    let artworkUrl = viewModel.selectedMusicArtworkUrl,
-                                    let url = URL(string: artworkUrl)
-                                {
-                                    AsyncImage(url: url) { image in
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                    } placeholder: {
-                                        ProgressView()
+                                    if
+                                        let artworkUrl = viewModel.selectedMusicArtworkUrl,
+                                        let url = URL(string: artworkUrl)
+                                    {
+                                        AsyncImage(url: url) { image in
+                                            image
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fill)
+                                        } placeholder: {
+                                            ProgressView()
+                                        }
+                                        .frame(width: 64, height: 64)
+                                        .clipShape(Circle())
+                                    } else {
+                                        Image(systemName: "waveform")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(.primary)
                                     }
-                                    .frame(width: 64, height: 64)
-                                    .clipShape(Circle())
-                                } else {
-                                    Image(systemName: "waveform")
-                                        .font(.system(size: 20))
-                                        .foregroundColor(.primary)
                                 }
+
+                                Circle()
+                                    .fill(Color.accentPrimary)
+                                    .frame(width: 20, height: 20)
+                                    .overlay(
+                                        Image(systemName: "plus")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundColor(.white)
+                                    )
+                                    .offset(x: 5, y: -5)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 4)
+
+                    // Title + Story Card
+                    VStack(alignment: .leading, spacing: 12) {
+                        TextField("사연의 제목을 작성해 주세요", text: $viewModel.titleText)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .focused($isFocused)
+
+                        ZStack(alignment: .topLeading) {
+                            if viewModel.storyText.isEmpty {
+                                Text(" 200자 이내로 자유롭게 공유하고싶은 사연을 작성해주세요")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 22)
                             }
 
-                            Circle()
-                                .fill(Color.accentPrimary)
-                                .frame(width: 20, height: 20)
-                                .overlay(
-                                    Image(systemName: "plus")
-                                        .font(.system(size: 12, weight: .bold))
-                                        .foregroundColor(.white)
-                                )
-                                .offset(x: 5, y: -5)
+                            TextEditor(text: $viewModel.storyText)
+                                .padding(.top, 14)
+                                .scrollContentBackground(.hidden)
+                                .focused($isFocused)
                         }
                     }
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 4)
+                    .frame(maxWidth: .infinity, minHeight: 250, alignment: .leading)
+                    .padding(20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color(red: 234/255, green: 232/255, blue: 224/255).opacity(0.5))
+                    )
+                    .padding(.horizontal, 24)
+                    .padding(.top, 32)
 
-                // Title + Story Card
-                VStack(alignment: .leading, spacing: 12) {
-                    TextField("사연의 제목을 작성해 주세요", text: $viewModel.titleText)
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                        .focused($isFocused)
-
-                    ZStack(alignment: .topLeading) {
-                        if viewModel.storyText.isEmpty {
-                            Text(" 200자 이내로 자유롭게 공유하고싶은 사연을 작성해주세요")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                                .padding(.top, 22)
-                        }
-
-                        TextEditor(text: $viewModel.storyText)
-                            .padding(.top, 14)
-                            .scrollContentBackground(.hidden)
-                            .focused($isFocused)
-                    }
-                }
-                .frame(maxWidth: .infinity, minHeight: 250, alignment: .leading)
-                .padding(20)
-                .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .fill(Color(red: 234/255, green: 232/255, blue: 224/255).opacity(0.5))
-                )
-                .padding(.horizontal, 24)
-                .padding(.top, 32)
-
-                Spacer(minLength: 0)
-
-                // Bottom: Character Count + Share Button
-                VStack(spacing: 8) {
-                    HStack {
-                        Text("\(viewModel.storyText.count)/\(viewModel.maxCharacters)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        Spacer()
-                    }
-                    .padding(.horizontal)
+                    // Character Count
+                    Text("\(viewModel.storyText.count)/\(viewModel.maxCharacters)")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 8)
 
                     if let errorMessage = viewModel.shareErrorMessage {
                         Text(errorMessage)
                             .font(.footnote)
                             .foregroundColor(.red)
-                            .padding(.horizontal)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 4)
                     }
-
-                    Button {
-                        viewModel.showSettings()
-                    } label: {
-                        Group {
-                            if viewModel.isSharing {
-                                ProgressView()
-                                    .tint(.white)
-                            } else {
-                                Text("share")
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(Color.textPrimary)
-                        .cornerRadius(28)
-                    }
-                    .disabled(viewModel.isSharing)
-                    .padding(.horizontal, 32)
                 }
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    viewModel.showSettings()
+                } label: {
+                    Group {
+                        if viewModel.isSharing {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text("share")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Color.textPrimary)
+                    .cornerRadius(28)
+                }
+                .disabled(viewModel.isSharing)
+                .padding(.horizontal, 32)
                 .padding(.bottom, 16)
+                .background(Color.mainBackground)
             }
             .navigationBarBackButtonHidden(true)
             .toolbar {

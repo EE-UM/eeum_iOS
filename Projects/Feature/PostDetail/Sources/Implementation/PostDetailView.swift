@@ -10,8 +10,7 @@ struct PostDetailView: View {
     @State private var isNavigatingToSearch: Bool = false
     @State private var showPostActionSheet: Bool = false
     @State private var isShowingEditSheet: Bool = false
-    @State private var commentText: String = ""
-    @FocusState private var isCommentFocused: Bool
+    @State private var showCommentSheet: Bool = false
     @State private var commentToReport: Comment?
     @State private var showReportReasonView: Bool = false
 
@@ -62,36 +61,16 @@ struct PostDetailView: View {
                     }
                 }
                 .scrollDismissesKeyboard(.interactively)
-                .onTapGesture {
-                    isCommentFocused = false
-                }
 
                 if !viewModel.isMyPost {
-                    SheetCommentInputBar(
-                        commentText: $commentText,
-                        isCommentFocused: _isCommentFocused,
+                    CommentInputBar(
                         selectedMusicTitle: viewModel.selectedMusicDisplayText,
                         selectedMusicArtworkURL: viewModel.selectedMusic?.artworkUrl,
-                        selectedMusicSongName: viewModel.selectedMusic?.songName,
-                        selectedMusicArtistName: viewModel.selectedMusic?.artistName,
                         onTapAddMusic: {
-                            isCommentFocused = false
-                            Task {
-                                try? await Task.sleep(nanoseconds: 300_000_000)
-                                openMusicSearch()
-                            }
+                            openMusicSearch()
                         },
-                        onSend: {
-                            let trimmed = commentText.trimmingCharacters(in: .whitespacesAndNewlines)
-                            guard !trimmed.isEmpty else { return }
-                            Task {
-                                await viewModel.createComment(content: trimmed)
-                                await MainActor.run {
-                                    if viewModel.commentErrorMessage == nil {
-                                        commentText = ""
-                                    }
-                                }
-                            }
+                        onTapInput: {
+                            showCommentSheet = true
                         },
                         onRemoveMusic: {
                             viewModel.clearSelectedMusic()
@@ -150,6 +129,11 @@ struct PostDetailView: View {
         .onDisappear {
             viewModel.stopPlayback()
         }
+        .onChange(of: viewModel.selectedMusic?.songName) { _ in
+            if viewModel.selectedMusic != nil && !showCommentSheet {
+                showCommentSheet = true
+            }
+        }
         .onChange(of: viewModel.didDeletePost) { didDelete in
             if didDelete {
                 dismiss()
@@ -175,6 +159,24 @@ struct PostDetailView: View {
             )
             .presentationDetents([.fraction(0.3)])
             .presentationDragIndicator(.hidden)
+        }
+        .sheet(isPresented: $showCommentSheet) {
+            CommentSheet(
+                viewModel: viewModel,
+                onTapAddMusic: {
+                    showCommentSheet = false
+                    Task {
+                        try? await Task.sleep(nanoseconds: 300_000_000)
+                        openMusicSearch()
+                    }
+                },
+                onReportComment: { comment in
+                    commentToReport = comment
+                    showReportReasonView = true
+                }
+            )
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
         }
         .navigationDestination(isPresented: $isShowingEditSheet) {
             if let detail = viewModel.postDetail {

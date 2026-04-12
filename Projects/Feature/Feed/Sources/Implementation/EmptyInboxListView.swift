@@ -5,9 +5,15 @@ struct EmptyInboxListView: View {
     let message: String
 
     var body: some View {
-        Image("nodata")
-            .resizable()
-            .scaledToFit()
-            .frame(maxWidth: .infinity)
+        VStack(spacing: 16) {
+            Image("nodata")
+                .resizable()
+                .scaledToFit()
+                .frame(maxWidth: .infinity)
+
+            Text(message)
+                .font(.system(size: 14))
+                .foregroundColor(.gray)
+        }
     }
 }
